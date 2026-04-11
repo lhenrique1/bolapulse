@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/matches.js": {
+      "runtime": "vercel-nodejs@20"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/matches", "destination": "/api/matches.js" }
+  ]
+}
