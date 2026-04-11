@@ -73,72 +73,81 @@ header {
 </div>
 
 <script>
-async function fetchMatches() {
-  const res = await fetch('/api/matches');
-  if (!res.ok) throw new Error(`Erro ${res.status}: Não carregou.`);
-  const data = await res.json();
-  return data.matches || [];
+async function fetchMatches(dateStr) {
+  // Puxa os jogos da sua API interna passando a data
+  const res = await fetch(`/api/matches?date=${dateStr}`);
+  if (!res.ok) throw new Error(`Erro ao carregar.`);
+  return await res.json();
 }
 
 function render(matches, containerId) {
     const container = document.getElementById(containerId);
     if(!container) return;
-    if(!matches.length) {
+    
+    if(!matches || matches.length === 0) {
         container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">Nenhum jogo encontrado.</p>';
         return;
     }
+
     container.innerHTML = matches.map(m => {
-        const status = m.status === 'FINISHED' ? 'Encerrado' : (m.status === 'IN_PLAY' ? 'AO VIVO' : 'Agendado');
-        const homeLogo = m.homeTeam.crest ? `<img src="${m.homeTeam.crest}">` : m.homeTeam.tla;
-        const awayLogo = m.awayTeam.crest ? `<img src="${m.awayTeam.crest}">` : m.awayTeam.tla;
+        // Ajuste para os nomes de status da API-Football
+        const status = m.fixture.status.short === 'FT' ? 'Encerrado' : 
+                      (['1P', '2P', 'HT'].includes(m.fixture.status.short) ? 'AO VIVO' : 'Agendado');
+        const home = m.teams.home;
+        const away = m.teams.away;
+        const goals = m.goals;
+
         return `
             <div class="match-card">
                 <div>
-                    <div class="team-logo">${homeLogo}</div>
-                    <div style="font-size:0.7rem;">${m.homeTeam.shortName}</div>
+                    <div class="team-logo"><img src="${home.logo}" alt="${home.name}"></div>
+                    <div style="font-size:0.7rem;">${home.name}</div>
                 </div>
                 <div>
-                    <div class="score-val">${m.score.fullTime.home ?? 0} - ${m.score.fullTime.away ?? 0}</div>
+                    <div class="score-val">${goals.home ?? 0} - ${goals.away ?? 0}</div>
                     <span class="pill">${status}</span>
                 </div>
                 <div>
-                    <div class="team-logo">${awayLogo}</div>
-                    <div style="font-size:0.7rem;">${m.awayTeam.shortName}</div>
+                    <div class="team-logo"><img src="${away.logo}" alt="${away.name}"></div>
+                    <div style="font-size:0.7rem;">${away.name}</div>
                 </div>
             </div>`;
     }).join('');
 }
 
-async function loadAll(manual = false) {
+async function loadAll() {
     const icon = document.getElementById('refreshIcon');
     if(icon) icon.classList.add('spin');
 
     try {
-        const matches = await fetchMatches();
-        
-        // Criar as datas para os filtros
         const now = new Date();
         const yest = new Date(now); yest.setDate(now.getDate() - 1);
         const tmr = new Date(now); tmr.setDate(now.getDate() + 1);
 
+        // Formata as datas para YYYY-MM-DD
         const dToday = now.toISOString().split('T')[0];
         const dYest = yest.toISOString().split('T')[0];
         const dTmr = tmr.toISOString().split('T')[0];
 
-        // Renderizar cada aba com seu filtro
-        render(matches, 'tab-all');
-        render(matches.filter(m => m.utcDate.includes(dYest)), 'tab-yest');
-        render(matches.filter(m => m.utcDate.includes(dToday)), 'tab-today');
-        render(matches.filter(m => m.utcDate.includes(dTmr)), 'tab-tmr');
+        // Busca os dados para as 3 abas ao mesmo tempo
+        const [mYest, mToday, mTmr] = await Promise.all([
+            fetchMatches(dYest),
+            fetchMatches(dToday),
+            fetchMatches(dTmr)
+        ]);
+
+        render(mToday, 'tab-all'); 
+        render(mYest, 'tab-yest');
+        render(mToday, 'tab-today');
+        render(mTmr, 'tab-tmr');
 
     } catch(err) {
         const target = document.getElementById('tab-all');
-        if(target) target.innerHTML = `<div class="error-box">${err.message}</div>`;
+        if(target) target.innerHTML = `<div class="error-box">Erro: ${err.message}</div>`;
     } finally {
         if(icon) icon.classList.remove('spin');
     }
 }
-
 
 function switchTab(id, el) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -148,7 +157,7 @@ function switchTab(id, el) {
     if(el) el.classList.add('active');
 }
 
-// Iniciar
+// Inicializa o site
 loadAll();
 </script>
 </body>
