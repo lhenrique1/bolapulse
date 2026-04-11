@@ -1,0 +1,74 @@
+<script>
+// 1. Função que busca os dados na sua API da Vercel
+async function fetchMatches() {
+  const res = await fetch('/api/matches');
+  if (!res.ok) throw new Error(`Erro ${res.status}`);
+  const data = await res.json();
+  return data.matches || [];
+}
+
+// 2. Função que organiza o carregamento
+async function loadAll(manual = false) {
+    const icon = document.getElementById('refreshIcon');
+    if(icon) icon.classList.add('spin');
+
+    try {
+        const matches = await fetchMatches();
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        render(matches, 'tab-all');
+        render(matches.filter(m => m.utcDate.includes(todayStr)), 'tab-today');
+    } catch(err) {
+        const container = document.getElementById('tab-all');
+        if(container) container.innerHTML = `<div class="error-box">${err.message}</div>`;
+    } finally {
+        if(icon) icon.classList.remove('spin');
+    }
+}
+
+// 3. Função que desenha os jogos na tela (ESSENCIAL)
+function render(matches, containerId) {
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    
+    if(!matches.length) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">Nenhum jogo encontrado.</p>';
+        return;
+    }
+
+    container.innerHTML = matches.map(m => {
+        const status = m.status === 'FINISHED' ? 'Encerrado' : (m.status === 'IN_PLAY' ? 'AO VIVO' : 'Agendado');
+        const homeLogo = m.homeTeam.crest ? `<img src="${m.homeTeam.crest}">` : m.homeTeam.tla;
+        const awayLogo = m.awayTeam.crest ? `<img src="${m.awayTeam.crest}">` : m.awayTeam.tla;
+        
+        return `
+            <div class="match-card">
+                <div>
+                    <div class="team-logo">${homeLogo}</div>
+                    <div style="font-size:0.7rem;">${m.homeTeam.shortName}</div>
+                </div>
+                <div>
+                    <div class="score-val">${m.score.fullTime.home ?? 0} - ${m.score.fullTime.away ?? 0}</div>
+                    <span class="pill">${status}</span>
+                </div>
+                <div>
+                    <div class="team-logo">${awayLogo}</div>
+                    <div style="font-size:0.7rem;">${m.awayTeam.shortName}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 4. Função para trocar as abas
+function switchTab(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const target = document.getElementById('tab-' + id);
+    if(target) target.classList.add('active');
+    if(el) el.classList.add('active');
+}
+
+// Inicia tudo
+loadAll();
+</script>
