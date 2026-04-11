@@ -112,11 +112,25 @@ function render(matches, containerId) {
 async function loadAll(manual = false) {
     const icon = document.getElementById('refreshIcon');
     if(icon) icon.classList.add('spin');
+
     try {
         const matches = await fetchMatches();
-        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // Criar as datas para os filtros
+        const now = new Date();
+        const yest = new Date(now); yest.setDate(now.getDate() - 1);
+        const tmr = new Date(now); tmr.setDate(now.getDate() + 1);
+
+        const dToday = now.toISOString().split('T')[0];
+        const dYest = yest.toISOString().split('T')[0];
+        const dTmr = tmr.toISOString().split('T')[0];
+
+        // Renderizar cada aba com seu filtro
         render(matches, 'tab-all');
-        render(matches.filter(m => m.utcDate.includes(todayStr)), 'tab-today');
+        render(matches.filter(m => m.utcDate.includes(dYest)), 'tab-yest');
+        render(matches.filter(m => m.utcDate.includes(dToday)), 'tab-today');
+        render(matches.filter(m => m.utcDate.includes(dTmr)), 'tab-tmr');
+
     } catch(err) {
         const target = document.getElementById('tab-all');
         if(target) target.innerHTML = `<div class="error-box">${err.message}</div>`;
@@ -124,6 +138,7 @@ async function loadAll(manual = false) {
         if(icon) icon.classList.remove('spin');
     }
 }
+
 
 function switchTab(id, el) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
