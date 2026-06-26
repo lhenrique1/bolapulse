@@ -333,11 +333,25 @@
     outline: none;
     transition: border-color 0.2s;
     width: 100%;
+    height: 38px;
+    box-sizing: border-box;
   }
   .form-group:focus-within label { color: var(--verde); border-color: var(--verde); }
   .form-group:focus-within input,
   .form-group:focus-within select { border-color: var(--verde); }
   .form-group select option { background: var(--surface); }
+  .form-group input[type="date"] {
+    font-size: 16px;
+    height: 38px;
+    line-height: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+  }
+  .form-group input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    margin: 0;
+  }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .form-row.full { grid-template-columns: 1fr; }
 
@@ -1253,6 +1267,15 @@
       </div>
     </div>
 
+    <!-- SITE SELECTOR -->
+    <div class="form-row full">
+      <div class="form-group" style="margin-bottom:0;">
+        <select id="fSite" style="padding:8px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);width:100%;outline:none;">
+          <option value="">SITES</option>
+        </select>
+      </div>
+    </div>
+
     <!-- MÚLTIPLA TOGGLE -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 2px;margin-bottom:4px;">
       <span style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Aposta Múltipla</span>
@@ -1646,7 +1669,7 @@
   <!-- Add site form -->
   <div class="form-card" style="margin-top:10px;padding:10px 12px;">
     <h3 style="font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:2px;color:var(--verde);margin-bottom:8px;">+ ADICIONAR PLATAFORMA</h3>
-    <div style="display:flex;gap:6px;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
       <div class="form-group" style="flex:2;margin-bottom:0;">
         <input type="text" id="siteNome" placeholder="Nome" style="padding:7px 10px;font-size:12px;">
       </div>
@@ -1654,6 +1677,9 @@
         <input type="number" id="siteSaldo" placeholder="R$" step="0.01" style="padding:7px 8px;font-size:12px;">
       </div>
       <button onclick="addSite()" style="background:var(--verde);color:#000;border:none;border-radius:8px;padding:0 14px;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;white-space:nowrap;align-self:stretch;">ADD</button>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <input type="url" id="siteUrl" placeholder="URL" style="padding:7px 10px;font-size:12px;">
     </div>
   </div>
 
@@ -1690,6 +1716,10 @@
     <div class="form-group" style="margin-bottom:10px;">
       <label>Nome</label>
       <input type="text" id="editSiteNome">
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label>URL da Casa</label>
+      <input type="url" id="editSiteUrl" placeholder="https://...">
     </div>
     <div class="form-group" style="margin-bottom:14px;">
       <label>Saldo Atual (R$)</label>
@@ -2103,6 +2133,7 @@ window.onload = async () => {
   checkSenhaAoAbrir();
   render();
   renderSites();
+  updateSiteSelector();
 
   const loader = document.getElementById('syncLoader');
   if (loader) { loader.textContent = '✅ SINCRONIZADO'; setTimeout(() => loader.remove(), 1200); }
@@ -3245,6 +3276,7 @@ function commitBet(status) {
   const mercado = document.getElementById('fMercado').value.trim();
   const entrada = parseFloat(document.getElementById('fEntrada').value);
   const tipo = document.getElementById('fTipo').value;
+  const siteId = parseInt(document.getElementById('fSite')?.value) || null;
 
   // If múltipla: combine jogo names
   const multiJogos = getMultiplaJogos();
@@ -3257,12 +3289,32 @@ function commitBet(status) {
   const isMultipla = _multiplaOn && _selecoes.filter(s=>s.odd>1).length >= 2;
   const oddOriginal = _superOn ? (parseFloat(document.getElementById('superOddOriginal').value)||0) : 0;
   const qualidade = parseInt(document.getElementById('fQualidade')?.value ?? 5);
-  const bet = { id: Date.now(), data, odd, liga, jogo, mercado, entrada, tipo, status, lucro, multipla: isMultipla, superAumentada: _superOn, oddOriginal, qualidade };
+  const siteName = siteId ? (sites.find(s=>s.id===siteId)?.nome || '') : '';
+  const bet = { id: Date.now(), data, odd, liga, jogo, mercado, entrada, tipo, status, lucro, multipla: isMultipla, superAumentada: _superOn, oddOriginal, qualidade, siteId, siteName };
+
+  // Update site balance automatically
+  if (siteId) {
+    const site = sites.find(s => s.id === siteId);
+    if (site) {
+      const now = new Date();
+      const txData = now.toLocaleDateString('pt-BR');
+      const txHora = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      if (!site.historico) site.historico = [];
+      if (status === 'win') {
+        site.saldo += lucro;
+        site.historico.unshift({ id: Date.now(), tipo: 'ganho', valor: lucro, obs: jogo || '', data: txData, hora: txHora });
+      } else if (status === 'loss') {
+        site.saldo = Math.max(0, site.saldo - entrada);
+        site.historico.unshift({ id: Date.now(), tipo: 'perda', valor: entrada, obs: jogo || '', data: txData, hora: txHora });
+      }
+      saveSites();
+    }
+  }
 
   bets.unshift(bet);
   save();
   render();
-  showToast('Aposta salva como ' + status.toUpperCase() + (isMultipla ? ' (Múltipla)' : '') + '!');
+  showToast('Aposta salva como ' + status.toUpperCase() + (isMultipla ? ' (Múltipla)' : '') + (siteName ? ' — ' + siteName : '') + '!');
 
   document.getElementById('fOdd').value = '';
   document.getElementById('fLiga').value = '';
@@ -4801,14 +4853,17 @@ function saveSites() { const s = JSON.stringify(sites); localStorage.setItem('mb
 function addSite() {
   const nome  = document.getElementById('siteNome').value.trim();
   const saldo = parseFloat(document.getElementById('siteSaldo').value) || 0;
+  const url   = document.getElementById('siteUrl').value.trim();
   if (!nome) { showToast('Digite o nome da plataforma!'); return; }
   const now = new Date();
   const hist = saldo > 0 ? [{ id: Date.now(), tipo: 'deposito', valor: saldo, obs: 'Depósito inicial', data: now.toLocaleDateString('pt-BR'), hora: now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) }] : [];
-  sites.push({ id: Date.now(), nome, saldo, saldoInicial: saldo, saques: 0, historico: hist });
+  sites.push({ id: Date.now(), nome, url, saldo, saldoInicial: saldo, saques: 0, historico: hist });
   saveSites();
   document.getElementById('siteNome').value = '';
   document.getElementById('siteSaldo').value = '';
+  document.getElementById('siteUrl').value = '';
   renderSites();
+  updateSiteSelector();
   showToast('Plataforma adicionada!');
 }
 
@@ -4848,6 +4903,7 @@ function openSiteEdit(id) {
   _editSiteId = id;
   _txType = null;
   document.getElementById('editSiteNome').value  = s.nome;
+  document.getElementById('editSiteUrl').value   = s.url || '';
   document.getElementById('editSiteSaldo').value = s.saldo;
   document.getElementById('txValue').value = '';
   document.getElementById('txObs').value = '';
@@ -4871,6 +4927,7 @@ function saveSiteEdit() {
   const s = sites.find(s => s.id === _editSiteId);
   if (!s) return;
   s.nome  = document.getElementById('editSiteNome').value.trim() || s.nome;
+  s.url   = document.getElementById('editSiteUrl').value.trim();
   s.saldo = parseFloat(document.getElementById('editSiteSaldo').value) || s.saldo;
   if (_txType) {
     const val = parseFloat(document.getElementById('txValue').value) || 0;
@@ -4982,6 +5039,7 @@ function renderSites() {
       <div class="site-info">
         <div class="site-name">${s.nome}</div>
         <div class="site-meta">Saques: R$ ${(s.saques||0).toFixed(2).replace('.',',')} &nbsp;|&nbsp; Lucro: <span style="color:${lucroSite>=0?'var(--verde)':'var(--vermelho)'}">${lucroStr}</span></div>
+        ${s.url ? `<a href="${s.url}" target="_blank" style="font-size:10px;color:#64b4ff;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:3px;">🔗 Abrir site</a>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
         <div class="site-saldo">R$ ${s.saldo.toFixed(2).replace('.',',')}</div>
@@ -5000,7 +5058,16 @@ function renderSites() {
       </div>
     </div>`;
   }).join('');
+  updateSiteSelector();
 }
+function updateSiteSelector() {
+  const sel = document.getElementById('fSite');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">SITES</option>' +
+    sites.map(s => `<option value="${s.id}" ${cur == s.id ? 'selected' : ''}>${s.nome}</option>`).join('');
+}
+
 function shareBet(id) {
   const bet = bets.find(b => b.id === id);
   if (!bet) return;
