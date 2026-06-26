@@ -2095,7 +2095,7 @@ window.onload = async () => {
   scheduleMidnightUpdate();
 
   // Show loading indicator
-  document.body.insertAdjacentHTML('beforeend', '<div id="syncLoader" style="position:fixed;top:0;left:0;right:0;z-index:999999;background:#00e676;color:#000;text-align:center;font-size:11px;font-weight:700;padding:4px;letter-spacing:1px;">🔄 SINCRONIZANDO...</div>');
+  document.body.insertAdjacentHTML('beforeend', '<div id="syncLoader" style="position:fixed;top:0;left:0;right:0;z-index:999999;background:#00e676;color:#000;text-align:center;font-size:11px;font-weight:700;padding:4px;letter-spacing:1px;">SINCRONIZANDO...</div>');
 
   try {
     // Load all data from Supabase
@@ -2136,7 +2136,7 @@ window.onload = async () => {
   updateSiteSelector();
 
   const loader = document.getElementById('syncLoader');
-  if (loader) { loader.textContent = '✅ SINCRONIZADO'; setTimeout(() => loader.remove(), 1200); }
+  if (loader) { loader.textContent = 'Sincronizado com sucesso'; setTimeout(() => loader.remove(), 1200); }
 
   // Ajusta padding-top dinamicamente baseado na altura real do header
   const hdr = document.querySelector('header');
