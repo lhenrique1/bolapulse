@@ -22,6 +22,7 @@
   body.tema-branco {
     background: linear-gradient(160deg,#ffffff 0%,#f4f6f9 50%,#eef1f5 100%) fixed !important;
   }
+  body.tema-branco, html:has(body.tema-branco) { --overscroll-bg: #f4f6f9; }
   body.tema-branco { --bg:#f4f6f9;--surface:#ffffff;--surface2:#e8ecf2;--border:#d0d7e3;--text:#1a1a2e;--muted:#6b7280;--verde:#16a34a;--amarelo:#b45309;--vermelho:#dc2626; }
   body.tema-branco header { background:#ffffff !important; border-bottom-color:#16a34a !important; box-shadow:0 2px 12px #0001 !important; }
   body.tema-branco .tab-bar { background:#ffffff !important; border-top-color:#d0d7e3 !important; }
@@ -69,6 +70,9 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow-x: hidden; width: 100%; }
+  html {
+    background: #090d13;
+  }
   body {
     font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     background: linear-gradient(160deg, #0a0f1a 0%, #070d12 40%, #0a1018 70%, #0c0f1c 100%);
@@ -5851,8 +5855,15 @@ function setTema(tema) {
 }
 function aplicarTema(tema) {
   document.body.classList.remove('tema-bege','tema-branco');
-  if (tema === 'bege') document.body.classList.add('tema-bege');
-  if (tema === 'branco') document.body.classList.add('tema-branco');
+  if (tema === 'bege') {
+    document.body.classList.add('tema-bege');
+    document.documentElement.style.background = '#f0e6d3';
+  } else if (tema === 'branco') {
+    document.body.classList.add('tema-branco');
+    document.documentElement.style.background = '#f4f6f9';
+  } else {
+    document.documentElement.style.background = '#090d13';
+  }
 }
 function atualizarBotoesTema(tema) {
   const e = document.getElementById('btnTemaEscuro');
