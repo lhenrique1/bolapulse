@@ -1070,7 +1070,7 @@
 <header>
   <div class="header-top">
     <div class="h1-wrap">
-      <h1><span style="color:#fff;font-style:italic;font-weight:900;">BET</span><span style="color:var(--verde);font-style:italic;font-weight:900;filter:drop-shadow(0 0 4px rgba(0,230,118,0.7));">CONTROL</span></h1>
+      <h1><span class="bet-logo-text" style="color:var(--verde);font-style:italic;font-weight:900;">BET</span><span style="color:var(--verde);font-style:italic;font-weight:900;filter:drop-shadow(0 0 4px rgba(0,230,118,0.7));">CONTROL</span></h1>
     </div>
     <div class="banca-header" style="position:relative;">
       <div style="display:flex;align-items:center;gap:8px;">
@@ -1802,7 +1802,7 @@ APAGAR
   <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111720;border-bottom:2px solid #00e676;flex-shrink:0;">
     <button onclick="closePdfModal()" style="padding:5px 11px;border-radius:6px;border:1px solid #607d8b;background:transparent;color:#607d8b;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">← VOLTAR</button>
     <div style="flex:1;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:2px;color:var(--verde);">RELATÓRIO</div>
-    <button onclick="printPdfReport()" style="padding:5px 11px;border-radius:6px;border:none;background:var(--verde);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">📋 COPIAR</button>
+    <button onclick="printPdfReport()" style="padding:5px 11px;border-radius:6px;border:none;background:var(--verde);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">⬆ COMPARTILHAR</button>
   </div>
   <!-- iframe renders the report -->
   <iframe id="pdfFrame" style="flex:1;border:none;width:100%;background:#0a0e14;"></iframe>
@@ -1813,7 +1813,7 @@ APAGAR
   <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111720;border-bottom:2px solid var(--amarelo);flex-shrink:0;">
     <button onclick="closeMercadosRelatorio()" style="padding:5px 11px;border-radius:6px;border:1px solid #607d8b;background:transparent;color:#607d8b;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">← VOLTAR</button>
     <div style="flex:1;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:2px;color:var(--amarelo);">ANÁLISE DE MERCADOS</div>
-    <button onclick="shareMercadosRelatorio()" style="padding:5px 11px;border-radius:6px;border:none;background:var(--amarelo);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">📋 COPIAR</button>
+    <button onclick="shareMercadosRelatorio()" style="padding:5px 11px;border-radius:6px;border:none;background:var(--amarelo);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">⬆ COMPARTILHAR</button>
   </div>
   <iframe id="mercadosFrame" style="flex:1;border:none;width:100%;background:#0a0e14;"></iframe>
 </div>
@@ -3441,7 +3441,7 @@ function renderMetrics() {
     ? ' <span style="font-size:9px;color:#f5a623;vertical-align:middle;white-space:nowrap;">(+' + inPlay.length + '⏳)</span>'
     : '');
   document.getElementById('metAcerto').textContent = acerto.toFixed(1) + '%';
-  document.getElementById('metLucro').textContent = (lucroTotal >= 0 ? '+R$' : '-R$') + Math.abs(lucroTotal).toFixed(0);
+  document.getElementById('metLucro').textContent = (lucroTotal >= 0 ? '+R$' : '-R$') + Math.abs(lucroTotal).toFixed(2).replace('.',',');
   document.getElementById('metROI').textContent = (roi >= 0 ? '+' : '') + roi.toFixed(2) + '%';
 
   const lEl = document.getElementById('metLucro');
@@ -5716,13 +5716,17 @@ ${lucroTotal>=0?'📈':'📉'} Lucro: ${lucroTotal>=0?'+':''}R$ ${lucroTotal.toF
 ━━━━━━━━━━━━━━━━━━━━
 ${linhas}`;
 
-  fallbackCopy(texto);
+  if (navigator.share) {
+    navigator.share({ title: 'BetControl — Relatório', text: texto }).catch(() => fallbackCopy(texto));
+  } else {
+    fallbackCopy(texto);
+  }
 }
 
 function fallbackCopy(texto) {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(texto).then(() => {
-      showToast('Copiado! Cole onde quiser compartilhar 📋');
+      showToast('Copiado! Cole onde quiser compartilhar');
     }).catch(() => showToast('Não foi possível compartilhar'));
   } else {
     showToast('Compartilhamento não disponível neste browser');
