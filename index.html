@@ -1263,6 +1263,7 @@
         <label>Jogo</label>
         <input type="text" id="fJogo" placeholder="" autocomplete="off"
           oninput="showJogoSuggestions(this.value)"
+          onfocus="showJogoSuggestions(this.value)"
           onblur="setTimeout(()=>hideJogoSuggestions(),180)">
         <div id="jogoSugDrop" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:999;background:#1a2332;border:1px solid #2a3a52;border-radius:0 0 8px 8px;box-shadow:0 8px 24px #0008;max-height:180px;overflow-y:auto;"></div>
       </div>
@@ -5801,22 +5802,40 @@ function saveBancaInicial() {
 
 function getJogosHistorico() {
   const apostas = JSON.parse(localStorage.getItem('apostas_lista') || '[]');
-  const jogos = [...new Set(apostas.map(a => a.jogo).filter(Boolean))];
-  return jogos;
+  const jogos = apostas.map(a => a.jogo).filter(Boolean);
+  // Extrai jogos completos + times individuais (separados por x, vs, X, VS)
+  const todos = new Set();
+  jogos.forEach(j => {
+    todos.add(j.trim());
+    const partes = j.split(/\s+(?:x|vs|X|VS)\s+/);
+    partes.forEach(p => { if (p.trim()) todos.add(p.trim()); });
+  });
+  // Ordena por mais recente (mantém ordem original do Set que reflete histórico)
+  return [...todos];
 }
 
 function showJogoSuggestions(val) {
   const drop = document.getElementById('jogoSugDrop');
   if (!drop) return;
   if (!val || val.length < 2) { drop.style.display = 'none'; return; }
-  const q = val.toLowerCase();
-  const matches = getJogosHistorico().filter(j => j.toLowerCase().includes(q));
-  if (!matches.length) { drop.style.display = 'none'; return; }
-  drop.innerHTML = matches.slice(0, 8).map(j =>
-    `<div onclick="selectJogo('${j.replace(/'/g,"\'")}'')"
-      onmouseenter="this.style.background='#243044'" onmouseleave="this.style.background='transparent'"
-      style="padding:8px 12px;cursor:pointer;font-size:12px;color:#cfd8dc;font-family:'DM Mono',monospace;border-bottom:1px solid #1e2d42;transition:background 0.15s;">
-      ${j.replace(new RegExp('(' + val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<span style="color:#00e676;font-weight:700;">$1</span>')}
+
+  // Detecta se está digitando o segundo time (após " x ")
+  const partes = val.split(/\s+x\s+/i);
+  const query = partes[partes.length - 1].toLowerCase().trim();
+  if (query.length < 2) { drop.style.display = 'none'; return; }
+
+  const matches = getJogosHistorico().filter(j => j.toLowerCase().startsWith(query));
+  // Também inclui os que contêm no meio
+  const matchesContain = getJogosHistorico().filter(j => !j.toLowerCase().startsWith(query) && j.toLowerCase().includes(query));
+  const todos = [...new Set([...matches, ...matchesContain])].slice(0, 8);
+
+  if (!todos.length) { drop.style.display = 'none'; return; }
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  drop.innerHTML = todos.map(j =>
+    `<div onclick="selectJogo('${j.replace(/'/g, "\\'")}')"
+      onmouseenter="this.style.background='rgba(0,230,118,0.07)'" onmouseleave="this.style.background='transparent'"
+      style="padding:8px 12px;cursor:pointer;font-size:12px;color:#cfd8dc;border-bottom:1px solid #1e2d42;transition:background 0.15s;">
+      ${j.replace(new RegExp('(' + escaped + ')', 'gi'), '<span style="color:#00e676;font-weight:700;">$1</span>')}
     </div>`
   ).join('');
   drop.style.display = 'block';
@@ -5828,8 +5847,18 @@ function hideJogoSuggestions() {
 }
 
 function selectJogo(val) {
-  document.getElementById('fJogo').value = val;
+  const input = document.getElementById('fJogo');
+  const atual = input.value;
+  // Se o valor atual já contém ' x ', substitui apenas o lado sendo digitado
+  const partes = atual.split(/\s+x\s+/i);
+  if (partes.length === 2) {
+    // Está digitando o segundo time
+    input.value = partes[0] + ' x ' + val;
+  } else {
+    input.value = val;
+  }
   hideJogoSuggestions();
+  input.focus();
 }
 
 
