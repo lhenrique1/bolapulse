@@ -1111,10 +1111,17 @@
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
-        <div onclick="abrirModalCfg('senha')" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+        <div onclick="abrirModalCfg('senha')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Senha de acesso</div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span id="menuSenhaVal" style="font-size:13px;color:var(--text);font-weight:500;">Desativada</span>
+            <span style="color:var(--muted);font-size:13px;">›</span>
+          </div>
+        </div>
+        <div onclick="abrirMetaRoi()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Meta de ROI</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span id="menuMetaRoiVal" style="font-size:13px;color:var(--verde);font-weight:500;">6%</span>
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
@@ -1548,6 +1555,50 @@
   </div>
 
 
+
+  <!-- META ROI -->
+  <div class="stats-section" style="margin-top:16px;opacity:0.75;">
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;">META DE ROI</div>
+
+    <!-- Seletor de meta -->
+    <div style="display:flex;gap:4px;margin-bottom:8px;">
+      <button onclick="setMetaRoi(6,this)" id="metaBtn6" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid rgba(0,230,118,0.3);background:rgba(0,230,118,0.08);color:var(--verde);font-size:10px;cursor:pointer;">6%</button>
+      <button onclick="setMetaRoi(8,this)" id="metaBtn8" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">8%</button>
+      <button onclick="setMetaRoi(10,this)" id="metaBtn10" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">10%</button>
+      <button onclick="setMetaRoi(15,this)" id="metaBtn15" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">15%</button>
+      <button onclick="setMetaRoi(20,this)" id="metaBtn20" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">20%</button>
+    </div>
+
+    <!-- Card principal compacto -->
+    <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div>
+          <div style="font-size:9px;color:var(--muted);">ROI ATUAL</div>
+          <div id="metaRoiAtual" style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--verde);">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:9px;color:var(--muted);">META</div>
+          <div id="metaRoiAlvo" style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--muted);">6%</div>
+        </div>
+      </div>
+      <div style="height:3px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:5px;">
+        <div id="metaRoiBar" style="height:100%;width:0%;background:var(--verde);border-radius:4px;transition:width 0.4s;opacity:0.5;"></div>
+      </div>
+      <div id="metaRoiMsg" style="font-size:10px;color:var(--muted);text-align:center;">Registre apostas para calcular</div>
+    </div>
+
+    <!-- Tabela: apostas necessárias (minimizada) -->
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <div onclick="toggleMetaTabela()" style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid transparent;background:var(--bg);cursor:pointer;" id="metaTabelaHeader">
+        <div style="padding:5px 8px;font-size:9px;color:var(--muted);">ROI</div>
+        <div style="padding:5px 8px;font-size:9px;color:var(--muted);text-align:center;">PARA 6%</div>
+        <div style="padding:5px 8px;font-size:9px;color:var(--muted);text-align:right;">PARA 8% ›</div>
+      </div>
+      <div id="metaRoiTabela" style="font-size:11px;color:var(--muted);padding:10px;text-align:center;display:none;">
+        Registre apostas para calcular
+      </div>
+    </div>
+  </div>
 
   <div style="margin-top:20px">
     <div class="form-group">
@@ -4413,6 +4464,9 @@ function updateStats() {
   document.getElementById('sTotalApostado').textContent = 'R$ ' + totalApostado.toFixed(2).replace('.', ',');
   document.getElementById('sTotalPerdido').textContent  = totalPerdido > 0 ? '-R$ ' + totalPerdido.toFixed(2).replace('.', ',') : 'R$ 0,00';
 
+  // ── META ROI ──────────────────────────────────────────────────────
+  updateMetaRoi(roi, lucroTotal, totalEntrada, wins.length + losses.length);
+
   // ── BREAK-EVEN ────────────────────────────────────────────────────
   // Break-Even = 1 / Odd Média  (minimum win rate to not lose money)
   // Compare with actual acerto to show if above/below the margin
@@ -6058,6 +6112,146 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+let _metaRoiAlvo = 6;
+
+function toggleMetaTabela() {
+  const tabela = document.getElementById('metaRoiTabela');
+  const header = document.getElementById('metaTabelaHeader');
+  const aberta = tabela.style.display !== 'none';
+  tabela.style.display = aberta ? 'none' : 'block';
+  header.style.borderBottom = aberta ? '1px solid transparent' : '1px solid var(--border)';
+  // atualiza seta
+  const ultima = header.querySelector('div:last-child');
+  if (ultima) ultima.textContent = aberta ? 'PARA 8% ›' : 'PARA 8% ↓';
+}
+
+function abrirMetaRoi() {
+  // Fecha menu
+  document.getElementById('menuConfigDrop').style.display = 'none';
+  // Vai para aba Stats
+  switchTab('stats');
+  // Scrolla até a seção META ROI
+  setTimeout(() => {
+    const el = document.querySelector('#statsPanel .stats-section:last-of-type') || document.getElementById('metaRoiTabela');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+
+function setMetaRoi(pct, btn) {
+  _metaRoiAlvo = pct;
+  // reset all buttons
+  [6,8,10,15,20].forEach(v => {
+    const b = document.getElementById('metaBtn'+v);
+    if (!b) return;
+    b.style.background = 'transparent';
+    b.style.color = 'var(--muted)';
+    b.style.border = '1px solid var(--border)';
+  });
+  btn.style.background = 'rgba(0,230,118,0.12)';
+  btn.style.color = 'var(--verde)';
+  btn.style.border = '1px solid rgba(0,230,118,0.4)';
+  document.getElementById('metaRoiAlvo').textContent = pct + '%';
+  const mv = document.getElementById('menuMetaRoiVal');
+  if (mv) mv.textContent = pct + '%';
+  updateStats();
+}
+
+function updateMetaRoi(roi, lucroTotal, totalEntrada, nApostas) {
+  const roiPct = roi * 100;
+  const alvo = _metaRoiAlvo;
+
+  // Atualiza ROI atual
+  const roiEl = document.getElementById('metaRoiAtual');
+  if (nApostas === 0) {
+    roiEl.textContent = '—';
+    roiEl.style.color = 'var(--muted)';
+    document.getElementById('metaRoiBar').style.width = '0%';
+    document.getElementById('metaRoiMsg').textContent = 'Registre apostas para calcular';
+    document.getElementById('metaRoiTabela').innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted)">Registre apostas para calcular</div>';
+    return;
+  }
+
+  roiEl.textContent = (roiPct >= 0 ? '+' : '') + roiPct.toFixed(2) + '%';
+  roiEl.style.color = roiPct >= alvo ? 'var(--verde)' : roiPct >= 0 ? 'var(--amarelo)' : 'var(--vermelho)';
+
+  // Barra de progresso
+  const progresso = Math.min(Math.max(roiPct / alvo * 100, 0), 100);
+  document.getElementById('metaRoiBar').style.width = progresso + '%';
+  document.getElementById('metaRoiBar').style.background = roiPct >= alvo ? 'var(--verde)' : 'var(--amarelo)';
+
+  if (roiPct >= alvo) {
+    document.getElementById('metaRoiMsg').innerHTML = '<span style="color:var(--verde);font-weight:700;">✓ Meta de ' + alvo + '% atingida!</span>';
+  } else {
+    document.getElementById('metaRoiMsg').textContent = (progresso.toFixed(0)) + '% do caminho para ' + alvo + '%';
+  }
+
+  // Tabela: apostas necessárias para atingir 6% e 8%
+  // Fórmula: lucro_atual + (n * entrada_media * roi_meta) = total_entrada_futuro * roi_meta
+  // Simplificado: apostas extras = (roi_meta * totalEntrada - lucroTotal) / (entrada_media * roi_meta)
+  // = totalEntrada * (roi_meta - roi_atual) / (entrada_media * roi_meta)
+  // Onde entrada_media = totalEntrada / nApostas
+  // Reduz para: nApostas_extra = nApostas * (roi_meta - roi_atual) / roi_meta
+  const metas = [
+    { pct: 5,  label: '5%'  },
+    { pct: 6,  label: '6%'  },
+    { pct: 7,  label: '7%'  },
+    { pct: 8,  label: '8%'  },
+    { pct: 9,  label: '9%'  },
+    { pct: 10, label: '10%' },
+    { pct: 12, label: '12%' },
+    { pct: 15, label: '15%' },
+    { pct: 20, label: '20%' },
+  ];
+
+  function apostasNecessarias(metaPct) {
+    if (roiPct >= metaPct) return '✓';
+    const extra = Math.ceil(nApostas * (metaPct - roiPct) / metaPct);
+    return extra > 0 ? extra : '✓';
+  }
+
+  let rows = '';
+  metas.forEach(m => {
+    const a6 = apostasNecessarias(6);
+    const a8 = apostasNecessarias(8);
+    // só mostrar linha do ROI desta meta
+    const ap6 = (function() {
+      if (roiPct >= 6) return '<span style="color:var(--verde)">✓</span>';
+      const v = Math.ceil(nApostas * (6 - roiPct) / 6);
+      return v > 0 ? v : '<span style="color:var(--verde)">✓</span>';
+    })();
+    const ap8 = (function() {
+      if (roiPct >= 8) return '<span style="color:var(--verde)">✓</span>';
+      const v = Math.ceil(nApostas * (8 - roiPct) / 8);
+      return v > 0 ? v : '<span style="color:var(--verde)">✓</span>';
+    })();
+
+    const isCurrent = (Math.abs(roiPct - m.pct) < 1);
+    const rowStyle = isCurrent ? 'background:rgba(0,230,118,0.07);font-weight:700;' : '';
+    rows += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);${rowStyle}">
+      <div style="padding:10px 12px;color:var(--text);">${m.label}</div>
+      <div style="padding:10px 12px;color:var(--verde);text-align:center;">${ap6}</div>
+      <div style="padding:10px 12px;color:var(--amarelo);text-align:right;">${ap8}</div>
+    </div>`;
+    // break after first iteration since ap6/ap8 don't depend on m
+  });
+
+  // Rebuild rows properly per ROI line
+  rows = '';
+  metas.forEach(m => {
+    const ap6 = roiPct >= 6 ? '<span style="color:var(--verde)">✓</span>' : (() => { const v = Math.ceil(nApostas * (6 - roiPct) / 6); return v > 0 ? String(v) : '<span style="color:var(--verde)">✓</span>'; })();
+    const ap8 = roiPct >= 8 ? '<span style="color:var(--verde)">✓</span>' : (() => { const v = Math.ceil(nApostas * (8 - roiPct) / 8); return v > 0 ? String(v) : '<span style="color:var(--verde)">✓</span>'; })();
+    const isNear = Math.abs(roiPct - m.pct) < 0.5;
+    rows += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);${isNear?'background:rgba(0,230,118,0.08);':''}">
+      <div style="padding:9px 12px;color:${isNear?'var(--verde)':'var(--text)'};font-weight:${isNear?'700':'400'};">${m.label}</div>
+      <div style="padding:9px 12px;text-align:center;">${ap6}</div>
+      <div style="padding:9px 12px;text-align:right;">${ap8}</div>
+    </div>`;
+  });
+
+  document.getElementById('metaRoiTabela').innerHTML = rows;
 }
 </script>
 
