@@ -626,7 +626,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     margin-bottom: 8px;
+    white-space: nowrap;
   }
 
   /* STATS OLD (keep for compat) */
@@ -1071,7 +1073,115 @@
 </head>
 <body>
 
-<header>
+<!-- ── TELA DE LOGIN/CADASTRO ──────────────────────────────────── -->
+<div id="authScreen" style="display:none;position:fixed;inset:0;z-index:999999;background:#080c14;
+  font-family:'DM Sans',sans-serif;overflow-y:auto;">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:36px;letter-spacing:3px;">
+        <span style="color:#00e676;">BET</span><span style="color:#00e676;">CONTROL</span>
+      </div>
+      <div style="font-size:12px;color:#546e7a;margin-top:4px;">Controle de Apostas Esportivas</div>
+    </div>
+
+    <!-- Card -->
+    <div style="background:#0e1420;border:1px solid #1e2d42;border-radius:16px;width:100%;max-width:360px;overflow:hidden;">
+
+      <!-- Abas Login / Cadastro -->
+      <div style="display:flex;border-bottom:1px solid #1e2d42;">
+        <button id="authTabLogin" onclick="authTab('login')"
+          style="flex:1;padding:14px;background:#00e676;color:#000;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          Entrar
+        </button>
+        <button id="authTabCadastro" onclick="authTab('cadastro')"
+          style="flex:1;padding:14px;background:transparent;color:#546e7a;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          Criar conta
+        </button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="authFormLogin" style="padding:24px;">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">EMAIL</div>
+          <input id="loginEmail" type="email" placeholder="seu@email.com"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">SENHA</div>
+          <input id="loginSenha" type="password" placeholder="••••••••"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'"
+            onkeydown="if(event.key==='Enter') fazerLogin()">
+        </div>
+        <div id="loginErro" style="display:none;background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.3);
+          color:#ff5252;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:14px;"></div>
+        <button onclick="fazerLogin()" id="loginBtn"
+          style="width:100%;padding:13px;border-radius:10px;border:none;background:#00e676;
+          color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          ENTRAR
+        </button>
+      </div>
+
+      <!-- CADASTRO -->
+      <div id="authFormCadastro" style="display:none;padding:24px;">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">NOME COMPLETO</div>
+          <input id="cadNome" type="text" placeholder="Seu nome"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">EMAIL</div>
+          <input id="cadEmail" type="email" placeholder="seu@email.com"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">SENHA</div>
+          <input id="cadSenha" type="password" placeholder="Mínimo 6 caracteres"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">TELEFONE</div>
+          <input id="cadTelefone" type="tel" placeholder="(11) 99999-9999"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">DATA DE NASCIMENTO</div>
+          <input id="cadDataNasc" type="date"
+            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
+            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+        </div>
+        <div id="cadErro" style="display:none;background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.3);
+          color:#ff5252;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:14px;"></div>
+        <button onclick="fazerCadastro()" id="cadBtn"
+          style="width:100%;padding:13px;border-radius:10px;border:none;background:#00e676;
+          color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          CRIAR CONTA GRÁTIS
+        </button>
+        <div style="font-size:11px;color:#546e7a;text-align:center;margin-top:12px;">
+          7 dias grátis — sem cartão de crédito
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:#2a3a52;margin-top:24px;">BetControl • Protegido</div>
+  </div>
+</div>
+
+
   <div class="header-top">
     <div class="h1-wrap">
       <h1><span class="bet-logo-text" style="color:var(--verde);font-style:italic;font-weight:900;">BET</span><span style="color:var(--verde);font-style:italic;font-weight:900;filter:drop-shadow(0 0 4px rgba(0,230,118,0.7));">CONTROL</span></h1>
@@ -1089,6 +1199,14 @@
 
       <!-- Menu de configurações -->
       <div id="menuConfigDrop" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px #0008;overflow:hidden;min-width:210px;">
+        <!-- Info do usuário logado -->
+        <div id="menuUserInfo" style="padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(0,230,118,0.04);">
+          <div style="font-size:11px;font-weight:700;color:var(--text);" id="menuUserNome">—</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+            <span style="font-size:10px;color:var(--muted);" id="menuUserEmail">—</span>
+            <span id="menuUserPlano" style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(0,230,118,0.15);color:var(--verde);">FREE</span>
+          </div>
+        </div>
         <div style="padding:8px 16px 5px;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid var(--border);">Configuração</div>
         <div onclick="abrirModalCfg('nome')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Nome do apostador</div>
@@ -1118,11 +1236,16 @@
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
-        <div onclick="abrirMetaRoi()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+        <div onclick="abrirMetaRoi()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Meta de ROI</div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span id="menuMetaRoiVal" style="font-size:13px;color:var(--verde);font-weight:500;">6%</span>
             <span style="color:var(--muted);font-size:13px;">›</span>
+          </div>
+        </div>
+        <div onclick="if(confirm('Sair da conta?')) bcLogout()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,23,68,0.06)'" onmouseleave="this.style.background='transparent'">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;color:#ff5252;font-weight:600;">Sair da conta</span>
           </div>
         </div>
       </div>
@@ -1488,11 +1611,11 @@
     <!-- Edge card — same style as acerto -->
     <div class="stat-acerto-card" style="margin-bottom:10px;">
       <div class="stat-acerto-top">
-        <span style="display:flex;align-items:center;gap:6px;">
+        <div>
           <span class="smc-label">Edge</span>
-          <span id="edgeBadge" style="display:none;padding:1px 7px;border-radius:20px;font-size:8px;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:1px;"></span>
-        </span>
-        <span id="sEdge" class="smc-value" style="color:var(--verde)">—</span>
+          <span id="edgeBadge" style="display:none;margin-left:6px;padding:1px 7px;border-radius:20px;font-size:8px;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:1px;vertical-align:middle;"></span>
+        </div>
+        <span id="sEdge" class="smc-value" style="color:var(--verde);">—</span>
       </div>
       <div class="progress-bar-bg">
         <div id="edgeBar" style="height:100%;width:0%;border-radius:3px;transition:width 0.6s ease;background:var(--verde);"></div>
@@ -1503,11 +1626,11 @@
     <!-- Break-Even card — same style as acerto -->
     <div class="stat-acerto-card" style="margin-bottom:10px;" id="breakEvenCard">
       <div class="stat-acerto-top">
-        <span style="display:flex;align-items:center;gap:6px;">
+        <div>
           <span class="smc-label">Break-Even</span>
-          <span id="breakEvenBadge" style="display:none;padding:1px 7px;border-radius:20px;font-size:8px;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:1px;"></span>
-        </span>
-        <span id="sBreakEven" class="smc-value" style="color:var(--muted)">—</span>
+          <span id="breakEvenBadge" style="display:none;margin-left:6px;padding:1px 7px;border-radius:20px;font-size:8px;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:1px;vertical-align:middle;"></span>
+        </div>
+        <span id="sBreakEven" class="smc-value" style="color:var(--muted);">—</span>
       </div>
       <div class="progress-bar-bg" style="position:relative;">
         <!-- break-even line marker -->
@@ -2189,11 +2312,96 @@ APAGAR
 const SUPA_URL = 'https://auxrfljdkikqzcxmtbii.supabase.co';
 const SUPA_KEY = 'sb_publishable_ygaVRDtPNilZMq8Bdh6QHw_n685HHpi';
 const SUPA_HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
-const USER_ID = 'betcontrol_user'; // ID fixo — todos os dispositivos compartilham os mesmos dados
+
+// ─── AUTH ─────────────────────────────────────────────────────────────
+let bcUser = null; // usuário logado
+const USER_ID_KEY = 'bc_user_id';
+
+function getUserId() {
+  return bcUser ? bcUser.id : localStorage.getItem(USER_ID_KEY) || 'betcontrol_user';
+}
+const USER_ID = getUserId();
+
+// Hash simples (sem crypto real — para MVP)
+function hashSenha(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return 'h' + Math.abs(h).toString(36);
+}
+
+async function bcLogin(email, senha) {
+  const h = hashSenha(senha);
+  const r = await fetch(
+    `${SUPA_URL}/rest/v1/bc_usuarios?email=eq.${encodeURIComponent(email)}&senha=eq.${h}&select=*`,
+    { headers: SUPA_HEADERS }
+  );
+  const d = await r.json();
+  if (!d || !d[0]) return { ok: false, msg: 'Email ou senha incorretos' };
+  const u = d[0];
+  if (u.status === 'bloqueado') return { ok: false, msg: 'Conta bloqueada. Entre em contato com o suporte.' };
+  if (u.status === 'inativo')   return { ok: false, msg: 'Conta inativa. Entre em contato com o suporte.' };
+  // Atualiza último acesso
+  await fetch(`${SUPA_URL}/rest/v1/bc_usuarios?id=eq.${u.id}`, {
+    method: 'PATCH', headers: SUPA_HEADERS,
+    body: JSON.stringify({ ultimo_acesso: new Date().toISOString() })
+  });
+  bcUser = u;
+  localStorage.setItem(USER_ID_KEY, u.id);
+  localStorage.setItem('bc_user_data', JSON.stringify(u));
+  return { ok: true, user: u };
+}
+
+async function bcCadastro(dados) {
+  // Verifica se email já existe
+  const check = await fetch(
+    `${SUPA_URL}/rest/v1/bc_usuarios?email=eq.${encodeURIComponent(dados.email)}&select=id`,
+    { headers: SUPA_HEADERS }
+  );
+  const exists = await check.json();
+  if (exists && exists[0]) return { ok: false, msg: 'Este email já está cadastrado' };
+
+  const expira = new Date();
+  expira.setDate(expira.getDate() + 7); // 7 dias de trial
+
+  const r = await fetch(`${SUPA_URL}/rest/v1/bc_usuarios`, {
+    method: 'POST',
+    headers: { ...SUPA_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify({
+      nome: dados.nome,
+      email: dados.email,
+      senha: hashSenha(dados.senha),
+      telefone: dados.telefone || null,
+      data_nascimento: dados.dataNasc || null,
+      plano: 'trial',
+      status: 'ativo',
+      expira_em: expira.toISOString(),
+      criado_em: new Date().toISOString(),
+    })
+  });
+  const d = await r.json();
+  if (!d || !d[0]) return { ok: false, msg: 'Erro ao criar conta. Tente novamente.' };
+  bcUser = d[0];
+  localStorage.setItem(USER_ID_KEY, d[0].id);
+  localStorage.setItem('bc_user_data', JSON.stringify(d[0]));
+  return { ok: true, user: d[0] };
+}
+
+function bcLogout() {
+  bcUser = null;
+  localStorage.removeItem(USER_ID_KEY);
+  localStorage.removeItem('bc_user_data');
+  location.reload();
+}
+
+function getPlanoLabel(plano) {
+  const l = { free: 'Free', trial: 'Trial', mensal: 'Mensal', anual: 'Anual' };
+  return l[plano] || plano;
+}
 
 async function supaGet(key) {
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage?user_id=eq.${USER_ID}&key=eq.${encodeURIComponent(key)}&select=value`, { headers: SUPA_HEADERS });
+    const uid = getUserId();
+    const r = await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage?user_id=eq.${uid}&key=eq.${encodeURIComponent(key)}&select=value`, { headers: SUPA_HEADERS });
     const d = await r.json();
     return d && d[0] ? d[0].value : null;
   } catch(e) { return null; }
@@ -2201,17 +2409,19 @@ async function supaGet(key) {
 
 async function supaSet(key, value) {
   try {
+    const uid = getUserId();
     await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage`, {
       method: 'POST',
       headers: { ...SUPA_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({ user_id: USER_ID, key, value })
+      body: JSON.stringify({ user_id: uid, key, value })
     });
   } catch(e) { localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); }
 }
 
 async function supaSetBatch(items) {
   try {
-    const rows = items.map(([key, value]) => ({ user_id: USER_ID, key, value }));
+    const uid = getUserId();
+    const rows = items.map(([key, value]) => ({ user_id: uid, key, value }));
     await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage`, {
       method: 'POST',
       headers: { ...SUPA_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
@@ -2227,8 +2437,98 @@ let currentFilter = 'todas';
 let selectMode = false;
 let selectedIds = new Set();
 
+// ─── AUTH UI ──────────────────────────────────────────────────────────
+function authTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('authFormLogin').style.display   = isLogin ? 'block' : 'none';
+  document.getElementById('authFormCadastro').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('authTabLogin').style.background   = isLogin ? '#00e676' : 'transparent';
+  document.getElementById('authTabLogin').style.color        = isLogin ? '#000' : '#546e7a';
+  document.getElementById('authTabCadastro').style.background = isLogin ? 'transparent' : '#00e676';
+  document.getElementById('authTabCadastro').style.color      = isLogin ? '#546e7a' : '#000';
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const erroEl = document.getElementById('loginErro');
+  const btn = document.getElementById('loginBtn');
+  if (!email || !senha) { erroEl.textContent = 'Preencha email e senha'; erroEl.style.display='block'; return; }
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  const res = await bcLogin(email, senha);
+  btn.textContent = 'ENTRAR'; btn.disabled = false;
+  if (!res.ok) { erroEl.textContent = res.msg; erroEl.style.display='block'; return; }
+  erroEl.style.display = 'none';
+  iniciarApp();
+}
+
+async function fazerCadastro() {
+  const nome    = document.getElementById('cadNome').value.trim();
+  const email   = document.getElementById('cadEmail').value.trim();
+  const senha   = document.getElementById('cadSenha').value;
+  const tel     = document.getElementById('cadTelefone').value.trim();
+  const nasc    = document.getElementById('cadDataNasc').value;
+  const erroEl  = document.getElementById('cadErro');
+  const btn     = document.getElementById('cadBtn');
+  if (!nome)  { erroEl.textContent='Informe seu nome'; erroEl.style.display='block'; return; }
+  if (!email) { erroEl.textContent='Informe seu email'; erroEl.style.display='block'; return; }
+  if (senha.length < 6) { erroEl.textContent='Senha mínima de 6 caracteres'; erroEl.style.display='block'; return; }
+  btn.textContent = 'Criando conta...'; btn.disabled = true;
+  const res = await bcCadastro({ nome, email, senha, telefone: tel, dataNasc: nasc });
+  btn.textContent = 'CRIAR CONTA GRÁTIS'; btn.disabled = false;
+  if (!res.ok) { erroEl.textContent = res.msg; erroEl.style.display='block'; return; }
+  erroEl.style.display = 'none';
+  iniciarApp();
+}
+
+function iniciarApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  if (bcUser) {
+    // Menu info
+    const el = (id) => document.getElementById(id);
+    if (el('menuUserNome'))  el('menuUserNome').textContent  = bcUser.nome;
+    if (el('menuUserEmail')) el('menuUserEmail').textContent = bcUser.email;
+    if (el('menuUserPlano')) {
+      el('menuUserPlano').textContent = getPlanoLabel(bcUser.plano).toUpperCase();
+      const cores = { free:'rgba(84,110,122,0.3)', trial:'rgba(255,215,64,0.2)', mensal:'rgba(68,138,255,0.2)', anual:'rgba(0,230,118,0.2)' };
+      const textos = { free:'#90a4ae', trial:'#ffd740', mensal:'#64b5f6', anual:'#00e676' };
+      el('menuUserPlano').style.background = cores[bcUser.plano] || cores.free;
+      el('menuUserPlano').style.color = textos[bcUser.plano] || textos.free;
+    }
+  }
+  carregarDadosApp();
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────
 window.onload = async () => {
+  // Verifica se usuário já está logado
+  const savedUser = localStorage.getItem('bc_user_data');
+  if (savedUser) {
+    try {
+      bcUser = JSON.parse(savedUser);
+      // Revalida no servidor
+      const r = await fetch(
+        `${SUPA_URL}/rest/v1/bc_usuarios?id=eq.${bcUser.id}&select=*`,
+        { headers: SUPA_HEADERS }
+      );
+      const d = await r.json();
+      if (d && d[0] && d[0].status === 'ativo') {
+        bcUser = d[0];
+        localStorage.setItem('bc_user_data', JSON.stringify(bcUser));
+        iniciarApp();
+        return;
+      }
+    } catch(e) {
+      // offline — usa dados salvos
+      iniciarApp();
+      return;
+    }
+  }
+  // Mostra tela de login
+  document.getElementById('authScreen').style.display = 'block';
+};
+
+async function carregarDadosApp() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('fData').value = today;
   scheduleMidnightUpdate();
@@ -2270,6 +2570,7 @@ window.onload = async () => {
   loadNome();
   loadSenhaConfig();
   checkSenhaAoAbrir();
+  checkAdminControls();
   render();
   renderSites();
   updateSiteSelector();
@@ -6341,6 +6642,75 @@ function acModalFechar() {
   _acPendingCallback = null;
   showToast('Boa decisão! Proteja sua banca. 🛡️');
 }
+
+// ── ADMIN CONTROLS ────────────────────────────────────────────────
+function checkAdminControls() {
+  const cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
+
+  // 1. Modo manutenção
+  if (cfg.manutencao) {
+    const msg = cfg.msgManutencao || 'O BetControl está em manutenção. Voltamos em breve!';
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:#080c14;color:#e8edf5;font-family:'DM Sans',sans-serif;padding:32px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">🔧</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#00e676;margin-bottom:8px;">BETCONTROL</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:10px;">Em Manutenção</div>
+        <div style="font-size:13px;color:#546e7a;max-width:280px;line-height:1.6;">${msg}</div>
+      </div>`;
+    return;
+  }
+
+  // 2. Aviso global (mensagem do admin)
+  if (cfg.avisoGlobal && cfg.avisoTexto) {
+    const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
+    const cor = cores[cfg.avisoTipo] || '#00e676';
+    const banner = document.createElement('div');
+    banner.id = 'adminBanner';
+    banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
+      color:#000;text-align:center;font-size:11px;font-weight:700;padding:5px 12px;
+      letter-spacing:0.5px;cursor:pointer;`;
+    banner.textContent = (cfg.avisoTitulo ? cfg.avisoTitulo + ': ' : '') + cfg.avisoTexto;
+    banner.onclick = () => banner.remove();
+    document.body.prepend(banner);
+  }
+
+  // 3. Forçar atualização de versão
+  if (cfg.versaoMinima) {
+    const atual = '7.1.1';
+    if (cfg.versaoMinima !== atual) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `position:fixed;inset:0;z-index:999999;background:#000d;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        font-family:'DM Sans',sans-serif;color:#e8edf5;text-align:center;padding:32px;`;
+      overlay.innerHTML = `
+        <div style="font-size:36px;margin-bottom:12px;">🚀</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Atualização disponível</div>
+        <div style="font-size:13px;color:#546e7a;margin-bottom:24px;max-width:260px;line-height:1.6;">
+          Uma nova versão (v${cfg.versaoMinima}) está disponível.<br>Atualize para continuar usando.
+        </div>
+        <div style="font-size:11px;color:#37474f;">Contate o administrador para receber o arquivo atualizado.</div>`;
+      document.body.prepend(overlay);
+    }
+  }
+
+  // 4. Tema forçado pelo admin
+  if (cfg.temaForcado) aplicarTema(cfg.temaForcado);
+
+  // 5. Autocontrole do admin (sobrescreve limites locais se admin definiu)
+  if (cfg.acMaxPerdas || cfg.acMaxPrejuizo || cfg.acMaxApostas) {
+    const ac = JSON.parse(localStorage.getItem('ac_config') || '{}');
+    if (cfg.acMaxPerdas   && !ac.maxPerdas)   ac.maxPerdas   = cfg.acMaxPerdas;
+    if (cfg.acMaxPrejuizo && !ac.maxPrejuizo) ac.maxPrejuizo = cfg.acMaxPrejuizo;
+    if (cfg.acMaxApostas  && !ac.maxApostas)  ac.maxApostas  = cfg.acMaxApostas;
+    localStorage.setItem('ac_config', JSON.stringify(ac));
+  }
+}
+
+// Fica escutando mudanças do admin em tempo real
+window.addEventListener('storage', (e) => {
+  if (e.key === 'admin_config') checkAdminControls();
+});
 
 let _metaRoiAlvo = 6;
 
