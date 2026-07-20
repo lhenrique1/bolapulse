@@ -1,0 +1,4 @@
+supabase/
+  functions/
+    bc-api/
+      index.ts
