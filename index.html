@@ -2309,20 +2309,29 @@ APAGAR
 
 <script>
 // ─── SUPABASE CONFIG ──────────────────────────────────────────────────
-const SUPA_URL = 'https://auxrfljdkikqzcxmtbii.supabase.co';
-const SUPA_KEY = 'sb_publishable_ygaVRDtPNilZMq8Bdh6QHw_n685HHpi';
-const SUPA_HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+const BC_API = 'https://auxrfljdkikqzcxmtbii.supabase.co/functions/v1/bc-api';
+
+// Token da sessão — única coisa salva localmente
+function getToken() { return localStorage.getItem('bc_token') || ''; }
+function setToken(t) { localStorage.setItem('bc_token', t); }
+function clearToken() { localStorage.removeItem('bc_token'); localStorage.removeItem('bc_user_data'); }
+
+async function bcApi(payload) {
+  try {
+    const r = await fetch(BC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-bc-token': getToken() },
+      body: JSON.stringify(payload)
+    });
+    return await r.json();
+  } catch(e) { return { ok: false, msg: 'Sem conexao com o servidor' }; }
+}
 
 // ─── AUTH ─────────────────────────────────────────────────────────────
-let bcUser = null; // usuário logado
-const USER_ID_KEY = 'bc_user_id';
+let bcUser = null;
 
-function getUserId() {
-  return bcUser ? bcUser.id : localStorage.getItem(USER_ID_KEY) || 'betcontrol_user';
-}
-const USER_ID = getUserId();
+function getUserId() { return bcUser ? bcUser.id : 'offline_user'; }
 
-// Hash simples (sem crypto real — para MVP)
 function hashSenha(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
@@ -2330,66 +2339,27 @@ function hashSenha(s) {
 }
 
 async function bcLogin(email, senha) {
-  const h = hashSenha(senha);
-  const r = await fetch(
-    `${SUPA_URL}/rest/v1/bc_usuarios?email=eq.${encodeURIComponent(email)}&senha=eq.${h}&select=*`,
-    { headers: SUPA_HEADERS }
-  );
-  const d = await r.json();
-  if (!d || !d[0]) return { ok: false, msg: 'Email ou senha incorretos' };
-  const u = d[0];
-  if (u.status === 'bloqueado') return { ok: false, msg: 'Conta bloqueada. Entre em contato com o suporte.' };
-  if (u.status === 'inativo')   return { ok: false, msg: 'Conta inativa. Entre em contato com o suporte.' };
-  // Atualiza último acesso
-  await fetch(`${SUPA_URL}/rest/v1/bc_usuarios?id=eq.${u.id}`, {
-    method: 'PATCH', headers: SUPA_HEADERS,
-    body: JSON.stringify({ ultimo_acesso: new Date().toISOString() })
-  });
-  bcUser = u;
-  localStorage.setItem(USER_ID_KEY, u.id);
-  localStorage.setItem('bc_user_data', JSON.stringify(u));
-  return { ok: true, user: u };
+  const res = await bcApi({ action: 'login', email, senha });
+  if (!res.ok) return res;
+  setToken(res.token);
+  bcUser = res.user;
+  localStorage.setItem('bc_user_data', JSON.stringify(res.user));
+  return res;
 }
 
 async function bcCadastro(dados) {
-  // Verifica se email já existe
-  const check = await fetch(
-    `${SUPA_URL}/rest/v1/bc_usuarios?email=eq.${encodeURIComponent(dados.email)}&select=id`,
-    { headers: SUPA_HEADERS }
-  );
-  const exists = await check.json();
-  if (exists && exists[0]) return { ok: false, msg: 'Este email já está cadastrado' };
-
-  const expira = new Date();
-  expira.setDate(expira.getDate() + 7); // 7 dias de trial
-
-  const r = await fetch(`${SUPA_URL}/rest/v1/bc_usuarios`, {
-    method: 'POST',
-    headers: { ...SUPA_HEADERS, 'Prefer': 'return=representation' },
-    body: JSON.stringify({
-      nome: dados.nome,
-      email: dados.email,
-      senha: hashSenha(dados.senha),
-      telefone: dados.telefone || null,
-      data_nascimento: dados.dataNasc || null,
-      plano: 'trial',
-      status: 'ativo',
-      expira_em: expira.toISOString(),
-      criado_em: new Date().toISOString(),
-    })
-  });
-  const d = await r.json();
-  if (!d || !d[0]) return { ok: false, msg: 'Erro ao criar conta. Tente novamente.' };
-  bcUser = d[0];
-  localStorage.setItem(USER_ID_KEY, d[0].id);
-  localStorage.setItem('bc_user_data', JSON.stringify(d[0]));
-  return { ok: true, user: d[0] };
+  const res = await bcApi({ action: 'cadastro', ...dados });
+  if (!res.ok) return res;
+  setToken(res.token);
+  bcUser = res.user;
+  localStorage.setItem('bc_user_data', JSON.stringify(res.user));
+  return res;
 }
 
-function bcLogout() {
+async function bcLogout() {
+  await bcApi({ action: 'logout' });
+  clearToken();
   bcUser = null;
-  localStorage.removeItem(USER_ID_KEY);
-  localStorage.removeItem('bc_user_data');
   location.reload();
 }
 
@@ -2400,33 +2370,20 @@ function getPlanoLabel(plano) {
 
 async function supaGet(key) {
   try {
-    const uid = getUserId();
-    const r = await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage?user_id=eq.${uid}&key=eq.${encodeURIComponent(key)}&select=value`, { headers: SUPA_HEADERS });
-    const d = await r.json();
-    return d && d[0] ? d[0].value : null;
-  } catch(e) { return null; }
+    const res = await bcApi({ action: 'getData', key });
+    return res.ok ? res.value : null;
+  } catch(e) { return localStorage.getItem(key); }
 }
 
 async function supaSet(key, value) {
   try {
-    const uid = getUserId();
-    await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage`, {
-      method: 'POST',
-      headers: { ...SUPA_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({ user_id: uid, key, value })
-    });
+    await bcApi({ action: 'setData', key, value });
   } catch(e) { localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); }
 }
 
 async function supaSetBatch(items) {
   try {
-    const uid = getUserId();
-    const rows = items.map(([key, value]) => ({ user_id: uid, key, value }));
-    await fetch(`${SUPA_URL}/rest/v1/betcontrol_storage`, {
-      method: 'POST',
-      headers: { ...SUPA_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify(rows)
-    });
+    await bcApi({ action: 'setDataBatch', items });
   } catch(e) {}
 }
 
@@ -2501,30 +2458,23 @@ function iniciarApp() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────
 window.onload = async () => {
-  // Verifica se usuário já está logado
-  const savedUser = localStorage.getItem('bc_user_data');
-  if (savedUser) {
+  const token = getToken();
+  if (token) {
     try {
-      bcUser = JSON.parse(savedUser);
-      // Revalida no servidor
-      const r = await fetch(
-        `${SUPA_URL}/rest/v1/bc_usuarios?id=eq.${bcUser.id}&select=*`,
-        { headers: SUPA_HEADERS }
-      );
-      const d = await r.json();
-      if (d && d[0] && d[0].status === 'ativo') {
-        bcUser = d[0];
-        localStorage.setItem('bc_user_data', JSON.stringify(bcUser));
+      const res = await bcApi({ action: 'validar' });
+      if (res.ok && res.user) {
+        bcUser = res.user;
+        localStorage.setItem('bc_user_data', JSON.stringify(res.user));
         iniciarApp();
         return;
       }
     } catch(e) {
-      // offline — usa dados salvos
-      iniciarApp();
-      return;
+      // Offline — tenta usar dados salvos
+      const saved = localStorage.getItem('bc_user_data');
+      if (saved) { bcUser = JSON.parse(saved); iniciarApp(); return; }
     }
+    clearToken();
   }
-  // Mostra tela de login
   document.getElementById('authScreen').style.display = 'block';
 };
 
