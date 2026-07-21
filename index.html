@@ -2483,11 +2483,24 @@ async function carregarDadosApp() {
   document.getElementById('fData').value = today;
   scheduleMidnightUpdate();
 
+  // Verifica se trocou de usuário — limpa localStorage do usuário anterior
+  const lastUserId = localStorage.getItem('bc_last_user_id');
+  const currentUserId = bcUser ? bcUser.id : null;
+  if (currentUserId && lastUserId && lastUserId !== currentUserId) {
+    // Usuário diferente — limpa todos os dados locais
+    const keysToKeep = ['bc_token', 'bc_user_data', 'bc_last_user_id', 'admin_config'];
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(k => { if (!keysToKeep.includes(k)) localStorage.removeItem(k); });
+    bets = [];
+    bancaInicial = 0;
+    sites = [];
+  }
+  if (currentUserId) localStorage.setItem('bc_last_user_id', currentUserId);
+
   // Show loading indicator
   document.body.insertAdjacentHTML('beforeend', '<div id="syncLoader" style="position:fixed;top:0;left:0;right:0;z-index:999999;background:#00e676;color:#000;text-align:center;font-size:11px;font-weight:700;padding:4px;letter-spacing:1px;">SINCRONIZANDO...</div>');
 
   try {
-    // Load all data from Supabase
     const [betsData, bancaData, obsData, sitesData, cfgNome, cfgSenha, cfgSenhaAtiva, cfgOddMin, cfgOddMed, cfgTema] = await Promise.all([
       supaGet('apostas_bets'),
       supaGet('apostas_banca'),
@@ -2501,17 +2514,29 @@ async function carregarDadosApp() {
       supaGet('cfg_tema')
     ]);
 
-    if (betsData !== null) { bets = typeof betsData === 'string' ? JSON.parse(betsData) : betsData; localStorage.setItem('apostas_bets', JSON.stringify(bets)); }
-    if (bancaData !== null) { bancaInicial = parseFloat(bancaData); localStorage.setItem('apostas_banca', bancaInicial); }
-    if (obsData !== null) localStorage.setItem('apostas_obs', typeof obsData === 'string' ? obsData : JSON.stringify(obsData));
-    if (sitesData !== null) { sites = typeof sitesData === 'string' ? JSON.parse(sitesData) : sitesData; localStorage.setItem('mbk_sites', JSON.stringify(sites)); }
-    if (cfgNome !== null) localStorage.setItem('cfg_nome', cfgNome);
-    if (cfgSenha !== null) localStorage.setItem('cfg_senha', cfgSenha);
-    if (cfgSenhaAtiva !== null) localStorage.setItem('cfg_senha_ativa', cfgSenhaAtiva);
-    if (cfgOddMin !== null) localStorage.setItem('cfg_odd_min', cfgOddMin);
-    if (cfgOddMed !== null) localStorage.setItem('cfg_odd_med', cfgOddMed);
-    if (cfgTema !== null) localStorage.setItem('cfg_tema', cfgTema);
-  } catch(e) {}
+    // Novo usuário = Supabase retorna null = começa zerado
+    bets        = betsData  !== null ? (typeof betsData  === 'string' ? JSON.parse(betsData)  : betsData)  : [];
+    bancaInicial = bancaData !== null ? parseFloat(bancaData) : 0;
+    sites       = sitesData !== null ? (typeof sitesData === 'string' ? JSON.parse(sitesData) : sitesData) : [];
+
+    localStorage.setItem('apostas_bets',  JSON.stringify(bets));
+    localStorage.setItem('apostas_banca', bancaInicial);
+    localStorage.setItem('mbk_sites',     JSON.stringify(sites));
+
+    if (obsData        !== null) localStorage.setItem('apostas_obs',      typeof obsData === 'string' ? obsData : JSON.stringify(obsData));
+    if (cfgNome        !== null) localStorage.setItem('cfg_nome',         cfgNome);
+    if (cfgSenha       !== null) localStorage.setItem('cfg_senha',        cfgSenha);
+    if (cfgSenhaAtiva  !== null) localStorage.setItem('cfg_senha_ativa',  cfgSenhaAtiva);
+    if (cfgOddMin      !== null) localStorage.setItem('cfg_odd_min',      cfgOddMin);
+    if (cfgOddMed      !== null) localStorage.setItem('cfg_odd_med',      cfgOddMed);
+    if (cfgTema        !== null) localStorage.setItem('cfg_tema',         cfgTema);
+
+  } catch(e) {
+    // Offline — usa dados locais existentes
+    bets         = JSON.parse(localStorage.getItem('apostas_bets')  || '[]');
+    bancaInicial = parseFloat(localStorage.getItem('apostas_banca') || '0');
+    sites        = JSON.parse(localStorage.getItem('mbk_sites')     || '[]');
+  }
 
   document.getElementById('bancaInicial').value = bancaInicial || '';
   loadObs();
