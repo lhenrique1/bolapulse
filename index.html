@@ -1145,10 +1145,57 @@
         </div>
         <div style="margin-bottom:12px;">
           <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">SENHA</div>
-          <input id="cadSenha" type="password" placeholder="Mínimo 6 caracteres"
-            style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1e2d42;
-            background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
-            onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'">
+          <div style="position:relative;">
+            <input id="cadSenha" type="password" placeholder="Mínimo 6 caracteres"
+              style="width:100%;padding:11px 44px 11px 14px;border-radius:8px;border:1px solid #1e2d42;
+              background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+              onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'"
+              oninput="checkSenhaForca(this.value);checkSenhasIguais()">
+            <button type="button" onclick="toggleSenhaVisivel()" title="Ver senha"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#546e7a;cursor:pointer;font-size:16px;padding:4px;" id="cadSenhaToggle">👁</button>
+          </div>
+          <!-- Indicador de força -->
+          <div id="senhaForcaWrap" style="display:none;margin-top:6px;">
+            <div style="display:flex;gap:3px;margin-bottom:3px;">
+              <div id="sf1" style="flex:1;height:3px;border-radius:2px;background:var(--border);"></div>
+              <div id="sf2" style="flex:1;height:3px;border-radius:2px;background:var(--border);"></div>
+              <div id="sf3" style="flex:1;height:3px;border-radius:2px;background:var(--border);"></div>
+              <div id="sf4" style="flex:1;height:3px;border-radius:2px;background:var(--border);"></div>
+            </div>
+            <div id="senhaForcaLabel" style="font-size:10px;color:var(--muted);"></div>
+          </div>
+          <!-- Sugestão de senha -->
+          <div id="cadSenhaSugestao" style="display:none;margin-top:6px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:8px;padding:8px 12px;">
+            <div style="font-size:10px;color:#546e7a;margin-bottom:4px;">SENHA SUGERIDA</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span id="cadSenhaGerada" style="font-family:'DM Mono',monospace;font-size:13px;color:#00e676;letter-spacing:1px;word-break:break-all;"></span>
+              <button type="button" onclick="usarSenhaSugerida()"
+                style="flex-shrink:0;padding:4px 10px;border-radius:6px;border:1px solid rgba(0,230,118,0.4);background:rgba(0,230,118,0.1);color:#00e676;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                Usar esta
+              </button>
+            </div>
+          </div>
+          <button type="button" onclick="gerarSenhaSugestao()"
+            style="margin-top:6px;width:100%;padding:7px;border-radius:7px;border:1px dashed rgba(0,230,118,0.3);background:transparent;color:#546e7a;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            ✨ Sugerir senha segura
+          </button>
+        </div>
+
+        <!-- CONFIRMAR SENHA -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">CONFIRMAR SENHA</div>
+          <div style="position:relative;">
+            <input id="cadSenhaConf" type="password" placeholder="Repita a senha"
+              style="width:100%;padding:11px 44px 11px 14px;border-radius:8px;border:1px solid #1e2d42;
+              background:#080c14;color:#e8edf5;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"
+              onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#1e2d42'"
+              oninput="checkSenhasIguais()"
+              onkeydown="if(event.key==='Enter') fazerCadastro()">
+            <button type="button" onclick="toggleSenhaConfVisivel()"
+              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#546e7a;cursor:pointer;font-size:16px;padding:4px;" id="cadSenhaConfToggle">👁</button>
+          </div>
+          <div id="senhasNaoConferem" style="display:none;font-size:11px;color:#ff5252;margin-top:5px;">⚠ As senhas não coincidem</div>
+          <div id="senhasConferem" style="display:none;font-size:11px;color:#00e676;margin-top:5px;">✓ Senhas coincidem</div>
         </div>
         <div style="margin-bottom:12px;">
           <div style="font-size:10px;font-weight:700;color:#546e7a;letter-spacing:1px;margin-bottom:6px;">TELEFONE</div>
@@ -1233,13 +1280,6 @@
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Senha de acesso</div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span id="menuSenhaVal" style="font-size:13px;color:var(--text);font-weight:500;">Desativada</span>
-            <span style="color:var(--muted);font-size:13px;">›</span>
-          </div>
-        </div>
-        <div onclick="abrirMetaRoi()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
-          <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Meta de ROI</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span id="menuMetaRoiVal" style="font-size:13px;color:var(--verde);font-weight:500;">6%</span>
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
@@ -1680,129 +1720,96 @@
 
 
 
-  <!-- META ROI -->
-  <div class="stats-section" style="margin-top:16px;opacity:0.75;">
-    <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;">META DE ROI</div>
 
-    <!-- Seletor de meta -->
-    <div style="display:flex;gap:4px;margin-bottom:8px;">
-      <button onclick="setMetaRoi(6,this)" id="metaBtn6" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid rgba(0,230,118,0.3);background:rgba(0,230,118,0.08);color:var(--verde);font-size:10px;cursor:pointer;">6%</button>
-      <button onclick="setMetaRoi(8,this)" id="metaBtn8" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">8%</button>
-      <button onclick="setMetaRoi(10,this)" id="metaBtn10" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">10%</button>
-      <button onclick="setMetaRoi(15,this)" id="metaBtn15" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">15%</button>
-      <button onclick="setMetaRoi(20,this)" id="metaBtn20" style="flex:1;padding:3px 2px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;">20%</button>
-    </div>
-
-    <!-- Card principal compacto -->
-    <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <div>
-          <div style="font-size:9px;color:var(--muted);">ROI ATUAL</div>
-          <div id="metaRoiAtual" style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--verde);">—</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:9px;color:var(--muted);">META</div>
-          <div id="metaRoiAlvo" style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--muted);">6%</div>
-        </div>
-      </div>
-      <div style="height:3px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:5px;">
-        <div id="metaRoiBar" style="height:100%;width:0%;background:var(--verde);border-radius:4px;transition:width 0.4s;opacity:0.5;"></div>
-      </div>
-      <div id="metaRoiMsg" style="font-size:10px;color:var(--muted);text-align:center;">Registre apostas para calcular</div>
-    </div>
-
-    <!-- Tabela: apostas necessárias (minimizada) -->
-    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-      <div onclick="toggleMetaTabela()" style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid transparent;background:var(--bg);cursor:pointer;" id="metaTabelaHeader">
-        <div style="padding:5px 8px;font-size:9px;color:var(--muted);">ROI</div>
-        <div style="padding:5px 8px;font-size:9px;color:var(--muted);text-align:center;">PARA 6%</div>
-        <div style="padding:5px 8px;font-size:9px;color:var(--muted);text-align:right;">PARA 8% ›</div>
-      </div>
-      <div id="metaRoiTabela" style="font-size:11px;color:var(--muted);padding:10px;text-align:center;display:none;">
-        Registre apostas para calcular
-      </div>
-    </div>
-  </div>
 
   <!-- AUTOCONTROLE -->
-  <div style="margin-top:20px;">
-    <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:10px;">🛡️ AUTOCONTROLE</div>
-
-    <!-- Status em tempo real -->
-    <div id="autocontroleStatus" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">PERDAS HOJE</div>
-        <div id="acPerdasHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--vermelho);">0</div>
-        <div id="acLimitePerdasLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">PREJUÍZO HOJE</div>
-        <div id="acPrejuizoHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--vermelho);">R$ 0</div>
-        <div id="acLimitePrejLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">APOSTAS HOJE</div>
-        <div id="acApostasHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);">0</div>
-        <div id="acLimiteApostasLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">SEGUIDAS LOSS</div>
-        <div id="acSeguidasLoss" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amarelo);">0</div>
-        <div id="acLimiteSegLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
-      </div>
+  <div style="margin-top:20px;" id="autocontroleSection">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;">🛡️ AUTOCONTROLE</div>
+      <div id="autocontrolePlanoTag" style="display:none;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,215,64,0.15);color:var(--amarelo);letter-spacing:1px;">PREMIUM</div>
     </div>
 
-    <!-- Configurações dos limites -->
-    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-      <!-- Max perdas por dia -->
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--text);">Máx. derrotas por dia</div>
-          <div style="font-size:10px;color:var(--muted);">Bloqueia após N perdas</div>
+    <!-- BLOQUEIO — aparece para trial -->
+    <div id="autocontroleLock" style="display:none;border:1px solid var(--border);border-radius:12px;padding:24px 16px;text-align:center;background:rgba(0,0,0,0.2);">
+      <div style="font-size:28px;margin-bottom:10px;">🔒</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Funcionalidade Premium</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">O Autocontrole está disponível nos planos<br><strong style="color:var(--verde);">Mensal</strong> e <strong style="color:var(--verde);">Anual</strong>.</div>
+      <div style="font-size:11px;color:var(--muted2);">Seu plano atual: <span id="lockPlanoAtual" style="color:var(--amarelo);font-weight:600;">Trial</span></div>
+    </div>
+
+    <!-- CONTEÚDO — aparece para mensal/anual/free -->
+    <div id="autocontroleConteudo">
+      <!-- Status em tempo real -->
+      <div id="autocontroleStatus" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">PERDAS HOJE</div>
+          <div id="acPerdasHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--vermelho);">0</div>
+          <div id="acLimitePerdasLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
         </div>
-        <input type="number" id="acMaxPerdas" min="1" max="20" placeholder="—"
-          style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
-          oninput="saveAutocontrole()">
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">PREJUÍZO HOJE</div>
+          <div id="acPrejuizoHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--vermelho);">R$ 0</div>
+          <div id="acLimitePrejLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">APOSTAS HOJE</div>
+          <div id="acApostasHoje" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);">0</div>
+          <div id="acLimiteApostasLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">SEGUIDAS LOSS</div>
+          <div id="acSeguidasLoss" style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amarelo);">0</div>
+          <div id="acLimiteSegLabel" style="font-size:9px;color:var(--muted);">lim: —</div>
+        </div>
       </div>
-      <!-- Max prejuízo por dia -->
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--text);">Máx. prejuízo diário (R$)</div>
-          <div style="font-size:10px;color:var(--muted);">Bloqueia ao atingir valor</div>
+
+      <!-- Configurações dos limites -->
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--text);">Máx. derrotas por dia</div>
+            <div style="font-size:10px;color:var(--muted);">Bloqueia após N perdas</div>
+          </div>
+          <input type="number" id="acMaxPerdas" min="1" max="20" placeholder="—"
+            style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
+            oninput="saveAutocontrole()">
         </div>
-        <input type="number" id="acMaxPrejuizo" min="1" placeholder="—"
-          style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
-          oninput="saveAutocontrole()">
-      </div>
-      <!-- Max apostas por dia -->
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--text);">Máx. apostas por dia</div>
-          <div style="font-size:10px;color:var(--muted);">Avisa ao ultrapassar</div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--text);">Máx. prejuízo diário (R$)</div>
+            <div style="font-size:10px;color:var(--muted);">Bloqueia ao atingir valor</div>
+          </div>
+          <input type="number" id="acMaxPrejuizo" min="1" placeholder="—"
+            style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
+            oninput="saveAutocontrole()">
         </div>
-        <input type="number" id="acMaxApostas" min="1" placeholder="—"
-          style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
-          oninput="saveAutocontrole()">
-      </div>
-      <!-- Max seguidas loss -->
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--text);">Máx. derrotas seguidas</div>
-          <div style="font-size:10px;color:var(--muted);">Alerta de sequência negativa</div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--text);">Máx. apostas por dia</div>
+            <div style="font-size:10px;color:var(--muted);">Avisa ao ultrapassar</div>
+          </div>
+          <input type="number" id="acMaxApostas" min="1" placeholder="—"
+            style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
+            oninput="saveAutocontrole()">
         </div>
-        <input type="number" id="acMaxSeguidas" min="1" placeholder="—"
-          style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
-          oninput="saveAutocontrole()">
-      </div>
-      <!-- Max valor por aposta -->
-      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--text);">Máx. valor por aposta (R$)</div>
-          <div style="font-size:10px;color:var(--muted);">Avisa se entrada exceder</div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--text);">Máx. derrotas seguidas</div>
+            <div style="font-size:10px;color:var(--muted);">Alerta de sequência negativa</div>
+          </div>
+          <input type="number" id="acMaxSeguidas" min="1" placeholder="—"
+            style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
+            oninput="saveAutocontrole()">
         </div>
-        <input type="number" id="acMaxEntrada" min="1" placeholder="—"
-          style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
-          oninput="saveAutocontrole()">
+        <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--text);">Máx. valor por aposta (R$)</div>
+            <div style="font-size:10px;color:var(--muted);">Avisa se entrada exceder</div>
+          </div>
+          <input type="number" id="acMaxEntrada" min="1" placeholder="—"
+            style="width:60px;flex-shrink:0;padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;text-align:center;"
+            oninput="saveAutocontrole()">
+        </div>
       </div>
     </div>
   </div>
@@ -2394,6 +2401,81 @@ let currentFilter = 'todas';
 let selectMode = false;
 let selectedIds = new Set();
 
+function checkSenhaForca(senha) {
+  const wrap = document.getElementById('senhaForcaWrap');
+  if (!senha) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  let forca = 0;
+  if (senha.length >= 6) forca++;
+  if (/[A-Z]/.test(senha)) forca++;
+  if (/[0-9]/.test(senha)) forca++;
+  if (/[@#$!%&*]/.test(senha)) forca++;
+  const cores = ['#ff1744','#ff9100','#ffd740','#00e676'];
+  const labels = ['Fraca','Razoável','Boa','Forte'];
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('sf'+i);
+    el.style.background = i <= forca ? cores[forca-1] : 'var(--border)';
+  }
+  document.getElementById('senhaForcaLabel').textContent = labels[forca-1] || '';
+  document.getElementById('senhaForcaLabel').style.color = cores[forca-1] || 'var(--muted)';
+}
+
+function checkSenhasIguais() {
+  const s1 = document.getElementById('cadSenha').value;
+  const s2 = document.getElementById('cadSenhaConf').value;
+  const nao = document.getElementById('senhasNaoConferem');
+  const ok  = document.getElementById('senhasConferem');
+  if (!s2) { nao.style.display='none'; ok.style.display='none'; return; }
+  const iguais = s1 === s2;
+  nao.style.display = iguais ? 'none' : 'block';
+  ok.style.display  = iguais ? 'block' : 'none';
+  document.getElementById('cadSenhaConf').style.borderColor = iguais ? '#00e676' : '#ff1744';
+}
+
+function toggleSenhaConfVisivel() {
+  const input = document.getElementById('cadSenhaConf');
+  const btn   = document.getElementById('cadSenhaConfToggle');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
+function gerarSenhaSugestao() {
+  const maiusculas = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const minusculas = 'abcdefghjkmnpqrstuvwxyz';
+  const numeros    = '23456789';
+  const especiais  = '@#$!%&*';
+  const todos      = maiusculas + minusculas + numeros + especiais;
+  let senha = '';
+  // Garante pelo menos 1 de cada tipo
+  senha += maiusculas[Math.floor(Math.random() * maiusculas.length)];
+  senha += minusculas[Math.floor(Math.random() * minusculas.length)];
+  senha += numeros[Math.floor(Math.random() * numeros.length)];
+  senha += especiais[Math.floor(Math.random() * especiais.length)];
+  // Completa até 10 caracteres
+  for (let i = 4; i < 10; i++) senha += todos[Math.floor(Math.random() * todos.length)];
+  // Embaralha
+  senha = senha.split('').sort(() => Math.random() - 0.5).join('');
+  document.getElementById('cadSenhaGerada').textContent = senha;
+  document.getElementById('cadSenhaSugestao').style.display = 'block';
+}
+
+function usarSenhaSugerida() {
+  const senha = document.getElementById('cadSenhaGerada').textContent;
+  const input = document.getElementById('cadSenha');
+  input.value = senha;
+  input.type = 'text'; // mostra a senha para o usuário copiar
+  document.getElementById('cadSenhaToggle').textContent = '🙈';
+  document.getElementById('cadSenhaSugestao').style.display = 'none';
+  showToast('Senha aplicada! Anote antes de continuar.');
+}
+
+function toggleSenhaVisivel() {
+  const input = document.getElementById('cadSenha');
+  const btn   = document.getElementById('cadSenhaToggle');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
 // ─── AUTH UI ──────────────────────────────────────────────────────────
 function authTab(tab) {
   const isLogin = tab === 'login';
@@ -2423,6 +2505,7 @@ async function fazerCadastro() {
   const nome    = document.getElementById('cadNome').value.trim();
   const email   = document.getElementById('cadEmail').value.trim();
   const senha   = document.getElementById('cadSenha').value;
+  const senhaC  = document.getElementById('cadSenhaConf').value;
   const tel     = document.getElementById('cadTelefone').value.trim();
   const nasc    = document.getElementById('cadDataNasc').value;
   const erroEl  = document.getElementById('cadErro');
@@ -2430,6 +2513,10 @@ async function fazerCadastro() {
   if (!nome)  { erroEl.textContent='Informe seu nome'; erroEl.style.display='block'; return; }
   if (!email) { erroEl.textContent='Informe seu email'; erroEl.style.display='block'; return; }
   if (senha.length < 6) { erroEl.textContent='Senha mínima de 6 caracteres'; erroEl.style.display='block'; return; }
+  if (!/[A-Z]/.test(senha)) { erroEl.textContent='A senha precisa ter pelo menos 1 letra maiúscula'; erroEl.style.display='block'; return; }
+  if (!/[0-9]/.test(senha)) { erroEl.textContent='A senha precisa ter pelo menos 1 número'; erroEl.style.display='block'; return; }
+  if (!/[@#$!%&*]/.test(senha)) { erroEl.textContent='A senha precisa ter pelo menos 1 caractere especial (@#$!%&*)'; erroEl.style.display='block'; return; }
+  if (senha !== senhaC) { erroEl.textContent='As senhas não coincidem'; erroEl.style.display='block'; return; }
   btn.textContent = 'Criando conta...'; btn.disabled = true;
   const res = await bcCadastro({ nome, email, senha, telefone: tel, dataNasc: nasc });
   btn.textContent = 'CRIAR CONTA GRÁTIS'; btn.disabled = false;
@@ -6534,7 +6621,22 @@ function saveAutocontrole() {
   localStorage.setItem('ac_config', JSON.stringify(cfg));
 }
 
+function checkAutocontrolePlano() {
+  const plano = bcUser ? bcUser.plano : 'free';
+  const bloqueado = plano === 'trial';
+  const lock    = document.getElementById('autocontroleLock');
+  const conteudo = document.getElementById('autocontroleConteudo');
+  const tag     = document.getElementById('autocontrolePlanoTag');
+  const lockPlano = document.getElementById('lockPlanoAtual');
+
+  if (lock) lock.style.display = bloqueado ? 'block' : 'none';
+  if (conteudo) conteudo.style.display = bloqueado ? 'none' : 'block';
+  if (tag) tag.style.display = bloqueado ? 'inline-block' : 'none';
+  if (lockPlano) lockPlano.textContent = plano.charAt(0).toUpperCase() + plano.slice(1);
+}
+
 function loadAutocontrole() {
+  checkAutocontrolePlano();
   const cfg = JSON.parse(localStorage.getItem('ac_config') || '{}');
   if (cfg.maxPerdas   != null) document.getElementById('acMaxPerdas').value   = cfg.maxPerdas;
   if (cfg.maxPrejuizo != null) document.getElementById('acMaxPrejuizo').value = cfg.maxPrejuizo;
