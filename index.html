@@ -4849,7 +4849,7 @@ function updateStats() {
   const totalEntrada = wins.concat(losses).reduce((a, b) => a + b.entrada, 0);
   const acerto = (wins.length + losses.length) > 0 ? wins.length / (wins.length + losses.length) : 0;
   const roi = totalEntrada > 0 ? lucroTotal / totalEntrada : 0;
-  const oddMedia = finalized.length > 0 ? finalized.reduce((a, b) => a + b.odd, 0) / finalized.length : 0;
+  const oddMedia = finalized.length > 0 ? finalized.reduce((a, b) => a + (parseFloat(b.odd) || 0), 0) / finalized.length : 0;
   const oddMin = finalized.length > 0 ? Math.min(...finalized.map(b => b.odd)) : 0;
   const anulValor = refunded.reduce((a, b) => a + b.entrada, 0);
 
@@ -4883,7 +4883,7 @@ function updateStats() {
   const edgeBadge = document.getElementById('edgeBadge');
   const edgeFormula = document.getElementById('edgeFormula');
 
-  if (wins.length + losses.length >= 2 && oddMedia > 1) {
+  if (wins.length + losses.length >= 1 && oddMedia > 1) {
     const edge = (acerto * oddMedia) - 1; // e.g. 0.08 = +8%
     const edgePct = edge * 100;
     const edgeStr = (edge >= 0 ? '+' : '') + edgePct.toFixed(2) + '%';
@@ -4942,7 +4942,7 @@ function updateStats() {
   const beMsg   = document.getElementById('breakEvenMsg');
   const beCard  = document.getElementById('breakEvenCard');
 
-  if (oddMedia > 1 && (wins.length + losses.length) >= 2) {
+  if (oddMedia > 1 && (wins.length + losses.length) >= 1) {
     const be    = 1 / oddMedia;          // e.g. 0.556 = 55.6%
     const bePct = be * 100;
     const acertoPct = acerto * 100;
