@@ -1350,10 +1350,27 @@
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
-        <div onclick="if(confirm('Sair da conta?')) bcLogout()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,23,68,0.06)'" onmouseleave="this.style.background='transparent'">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:13px;color:#ff5252;font-weight:600;">Sair da conta</span>
+        <div onclick="abrirMensagensAdmin()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text);font-weight:500;">📣 Mensagens</span>
+            <span id="msgAdminBadge" style="display:none;background:var(--vermelho);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;"></span>
           </div>
+          <div style="font-size:10px;color:var(--muted);">Avisos do administrador</div>
+        </div>
+        <div onclick="abrirMensagensAdmin()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Mensagens</div>
+              <span id="menuMsgCount" style="font-size:13px;color:var(--text);font-weight:500;">Nenhuma</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div id="menuMsgDot" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--verde);"></div>
+              <span style="color:var(--muted);font-size:13px;">›</span>
+            </div>
+          </div>
+        </div>
+        <div onclick="if(confirm('Sair da conta?')) bcLogout()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,23,68,0.06)'" onmouseleave="this.style.background='transparent'">
+            <span style="font-size:13px;color:#ff5252;font-weight:600;">Sair da conta</span>
         </div>
       </div>
 
@@ -2642,6 +2659,7 @@ function iniciarApp() {
   }
   carregarDadosApp();
   setTimeout(initExportButtons, 600);
+  setTimeout(checkMensagensAdmin, 800);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────
@@ -6901,7 +6919,7 @@ function checkAdminControls() {
   // 4. Tema forçado pelo admin
   if (cfg.temaForcado) aplicarTema(cfg.temaForcado);
 
-  // 5. Autocontrole do admin (sobrescreve limites locais se admin definiu)
+  // 5. Autocontrole do admin
   if (cfg.acMaxPerdas || cfg.acMaxPrejuizo || cfg.acMaxApostas) {
     const ac = JSON.parse(localStorage.getItem('ac_config') || '{}');
     if (cfg.acMaxPerdas   && !ac.maxPerdas)   ac.maxPerdas   = cfg.acMaxPerdas;
@@ -6909,12 +6927,173 @@ function checkAdminControls() {
     if (cfg.acMaxApostas  && !ac.maxApostas)  ac.maxApostas  = cfg.acMaxApostas;
     localStorage.setItem('ac_config', JSON.stringify(ac));
   }
+
+  // 6. Badge de mensagens novas
+  checkMensagensNovas();
 }
 
 // Fica escutando mudanças do admin em tempo real
 window.addEventListener('storage', (e) => {
   if (e.key === 'admin_config') checkAdminControls();
+  if (e.key === 'admin_mensagens') checkMensagensAdmin();
 });
+
+// MENSAGENS DO ADMIN
+function abrirMensagensAdmin() {
+  document.getElementById('menuConfigDrop').style.display = 'none';
+  const modal = document.getElementById('mensagensAdminModal');
+  modal.style.display = 'flex';
+  renderMensagensAdmin();
+}
+
+function fecharMensagensAdmin() {
+  document.getElementById('mensagensAdminModal').style.display = 'none';
+}
+
+function renderMensagensAdmin() {
+  const cfg       = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  const mensagens = JSON.parse(localStorage.getItem('admin_mensagens_historico') || '[]');
+  const lidas     = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+  const lista     = document.getElementById('mensagensAdminLista');
+  if (!lista) return;
+
+  // Aviso ativo do admin
+  const avisos = [];
+  if (cfg.avisoGlobal && cfg.avisoTexto) {
+    avisos.push({ id: 'ativo', titulo: cfg.avisoTitulo || 'Aviso', texto: cfg.avisoTexto, tipo: cfg.avisoTipo || 'info', ts: 'Ativo agora' });
+  }
+  // Histórico de mensagens salvas no localStorage
+  mensagens.forEach(m => avisos.push(m));
+
+  if (!avisos.length) {
+    lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px;">Nenhuma mensagem do administrador</div>';
+    atualizarBadgeMensagens(0);
+    return;
+  }
+
+  const naoLidas = avisos.filter(m => !lidas.includes(m.id || m.ts)).length;
+  atualizarBadgeMensagens(naoLidas);
+
+  const cores = { info:'var(--azul)', warn:'var(--amarelo)', update:'var(--verde)', promo:'var(--roxo)' };
+  const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
+
+  lista.innerHTML = avisos.map(m => {
+    const lida = lidas.includes(m.id || m.ts);
+    return `<div onclick="marcarLida('${m.id || m.ts}')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:${lida ? 'transparent' : 'rgba(0,230,118,0.03)'};">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:18px;flex-shrink:0;">${icons[m.tipo] || 'ℹ️'}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
+            <span style="font-size:13px;font-weight:${lida ? '500' : '700'};color:var(--text);">${m.titulo || 'Aviso'}</span>
+            ${!lida ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--verde);flex-shrink:0;"></div>' : ''}
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;">${m.texto}</div>
+          <div style="font-size:10px;color:var(--muted2);margin-top:4px;">${m.ts || ''}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function marcarLida(id) {
+  const lidas = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+  if (!lidas.includes(id)) { lidas.push(id); localStorage.setItem('admin_msgs_lidas', JSON.stringify(lidas)); }
+  renderMensagensAdmin();
+}
+
+function marcarTodasLidas() {
+  const cfg       = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  const mensagens = JSON.parse(localStorage.getItem('admin_mensagens_historico') || '[]');
+  const ids = [];
+  if (cfg.avisoGlobal) ids.push('ativo');
+  mensagens.forEach(m => ids.push(m.id || m.ts));
+  localStorage.setItem('admin_msgs_lidas', JSON.stringify(ids));
+  renderMensagensAdmin();
+  showToast('Todas mensagens marcadas como lidas');
+}
+
+function atualizarBadgeMensagens(count) {
+  const badge = document.getElementById('msgAdminBadge');
+  if (!badge) return;
+  if (count > 0) { badge.style.display = 'inline-block'; badge.textContent = count; }
+  else { badge.style.display = 'none'; }
+}
+
+function checkMensagensNovas() {
+  const cfg    = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  const lidas  = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+  let naoLidas = 0;
+  if (cfg.avisoGlobal && cfg.avisoTexto && !lidas.includes('ativo')) naoLidas++;
+  atualizarBadgeMensagens(naoLidas);
+}
+
+// ── MENSAGENS DO ADMIN ────────────────────────────────────────────
+function checkMensagensAdmin() {
+  const cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
+  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
+  const naoLidas = msgs.filter(m => !lidas.includes(m.ts));
+  const dot  = document.getElementById('menuMsgDot');
+  const count = document.getElementById('menuMsgCount');
+  if (dot)   dot.style.display   = naoLidas.length > 0 ? 'block' : 'none';
+  if (count) count.textContent   = naoLidas.length > 0 ? naoLidas.length + ' nova(s)' : 'Nenhuma';
+  // Mostra banner se tiver aviso global ativo
+  if (cfg.avisoGlobal && cfg.avisoTexto) {
+    const bannerExistente = document.getElementById('adminBanner');
+    if (!bannerExistente) {
+      const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
+      const cor = cores[cfg.avisoTipo] || '#00e676';
+      const banner = document.createElement('div');
+      banner.id = 'adminBanner';
+      banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
+        color:#000;text-align:center;font-size:11px;font-weight:700;padding:6px 12px;
+        letter-spacing:0.5px;cursor:pointer;`;
+      banner.textContent = (cfg.avisoTitulo ? cfg.avisoTitulo + ': ' : '') + cfg.avisoTexto;
+      banner.onclick = () => banner.remove();
+      document.body.prepend(banner);
+    }
+  }
+}
+
+function abrirMensagensAdmin() {
+  document.getElementById('menuConfigDrop').style.display = 'none';
+  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
+  const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
+  const lista = document.getElementById('mensagensLista');
+  const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
+
+  if (!msgs.length) {
+    lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px 16px;font-size:13px;">Nenhuma mensagem ainda</div>';
+  } else {
+    lista.innerHTML = msgs.map(m => {
+      const lida = lidas.includes(m.ts);
+      return `<div style="padding:12px 18px;border-bottom:1px solid var(--border);opacity:${lida?'0.5':'1'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${!lida ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--verde);flex-shrink:0;"></div>' : ''}
+            <span style="font-size:13px;font-weight:700;color:var(--text);">${icons[m.tipo]||'📣'} ${m.titulo}</span>
+          </div>
+          <span style="font-size:10px;color:var(--muted);">${m.ts}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">${m.texto}</div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('mensagensModal').style.display = 'flex';
+}
+
+function fecharMensagensModal() {
+  document.getElementById('mensagensModal').style.display = 'none';
+}
+
+function marcarTodasLidas() {
+  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
+  const lidas = msgs.map(m => m.ts);
+  localStorage.setItem('bc_msgs_lidas', JSON.stringify(lidas));
+  checkMensagensAdmin();
+  fecharMensagensModal();
+  showToast('Todas marcadas como lidas');
+}
 
 let _metaRoiAlvo = 6;
 
@@ -7090,6 +7269,41 @@ function updateMetaRoi(roi, lucroTotal, totalEntrada, nApostas) {
 </div>
 
 <!-- Modal Autocontrole -->
+<!-- Modal Mensagens Admin -->
+<div id="mensagensAdminModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:360px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📣 Mensagens</div>
+        <div style="font-size:11px;color:var(--muted);">Avisos do administrador</div>
+      </div>
+      <button onclick="fecharMensagensAdmin()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;">×</button>
+    </div>
+    <div id="mensagensAdminLista" style="overflow-y:auto;flex:1;padding:8px 0;">
+      <div style="text-align:center;color:var(--muted);padding:24px;font-size:13px;">Nenhuma mensagem</div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);">
+      <button onclick="marcarTodasLidas()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">
+        Marcar todas como lidas
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mensagens do Admin -->
+<div id="mensagensModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:360px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);">📣 Mensagens</div>
+      <button onclick="fecharMensagensModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div id="mensagensLista" style="overflow-y:auto;padding:8px 0;flex:1;"></div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);">
+      <button onclick="marcarTodasLidas()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Marcar todas como lidas</button>
+    </div>
+  </div>
+</div>
+
 <div id="autocontroleModal" style="display:none;position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;padding:24px;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:320px;overflow:hidden;box-shadow:0 8px 40px #000c;">
     <div style="padding:20px 18px 6px;text-align:center;">
