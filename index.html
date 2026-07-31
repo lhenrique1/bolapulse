@@ -1352,21 +1352,26 @@
         </div>
         <div onclick="abrirMensagensAdmin()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
           <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:13px;color:var(--text);font-weight:500;">📣 Mensagens</span>
-            <span id="msgAdminBadge" style="display:none;background:var(--vermelho);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;"></span>
-          </div>
-          <div style="font-size:10px;color:var(--muted);">Avisos do administrador</div>
-        </div>
-        <div onclick="abrirMensagensAdmin()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Mensagens</div>
-              <span id="menuMsgCount" style="font-size:13px;color:var(--text);font-weight:500;">Nenhuma</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#546e7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:1px;">Mensagens</div>
+                <span id="menuMsgCount" style="font-size:13px;color:var(--text);font-weight:500;">Nenhuma</span>
+              </div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div id="menuMsgDot" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--verde);"></div>
               <span style="color:var(--muted);font-size:13px;">›</span>
             </div>
+          </div>
+        </div>
+        <div onclick="bcLogout()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background='transparent'">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Mudar de conta</div>
+              <span style="font-size:13px;color:var(--text);font-weight:500;">Fazer login em outra conta</span>
+            </div>
+            <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
         <div onclick="if(confirm('Sair da conta?')) bcLogout()" style="padding:10px 16px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,23,68,0.06)'" onmouseleave="this.style.background='transparent'">
@@ -2399,10 +2404,10 @@ APAGAR
 </div>
 
 <script>
-// ─── SUPABASE CONFIG ──────────────────────────────────────────────────
+// --- SUPABASE CONFIG --------------------------------------------------
 const BC_API = 'https://auxrfljdkikqzcxmtbii.supabase.co/functions/v1/bc-api';
 
-// Token da sessão — única coisa salva localmente
+// Token da sessão - única coisa salva localmente
 function getToken() { return localStorage.getItem('bc_token') || ''; }
 function setToken(t) { localStorage.setItem('bc_token', t); }
 function clearToken() { localStorage.removeItem('bc_token'); localStorage.removeItem('bc_user_data'); }
@@ -2418,7 +2423,7 @@ async function bcApi(payload) {
   } catch(e) { return { ok: false, msg: 'Sem conexao com o servidor' }; }
 }
 
-// ─── AUTH ─────────────────────────────────────────────────────────────
+// --- AUTH -------------------------------------------------------------
 let bcUser = null;
 
 function getUserId() { return bcUser ? bcUser.id : 'offline_user'; }
@@ -2478,7 +2483,7 @@ async function supaSetBatch(items) {
   } catch(e) {}
 }
 
-// ─── STATE ───────────────────────────────────────────────────────────
+// --- STATE -----------------------------------------------------------
 let bets = JSON.parse(localStorage.getItem('apostas_bets') || '[]');
 let bancaInicial = parseFloat(localStorage.getItem('apostas_banca') || '0');
 let currentFilter = 'todas';
@@ -2593,7 +2598,7 @@ function usarSenhaSugerida() {
   showToast('Senha aplicada! Anote antes de continuar.');
 }
 
-// ─── AUTH UI ──────────────────────────────────────────────────────────
+// --- AUTH UI ----------------------------------------------------------
 function authTab(tab) {
   const isLogin = tab === 'login';
   document.getElementById('authFormLogin').style.display   = isLogin ? 'block' : 'none';
@@ -2662,7 +2667,7 @@ function iniciarApp() {
   setTimeout(checkMensagensAdmin, 800);
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────
+// --- INIT -------------------------------------------------------------
 window.onload = async () => {
   const token = getToken();
   if (token) {
@@ -2675,7 +2680,7 @@ window.onload = async () => {
         return;
       }
     } catch(e) {
-      // Offline — tenta usar dados salvos
+      // Offline - tenta usar dados salvos
       const saved = localStorage.getItem('bc_user_data');
       if (saved) { bcUser = JSON.parse(saved); iniciarApp(); return; }
     }
@@ -2689,11 +2694,11 @@ async function carregarDadosApp() {
   document.getElementById('fData').value = today;
   scheduleMidnightUpdate();
 
-  // Verifica se trocou de usuário — limpa localStorage do usuário anterior
+  // Verifica se trocou de usuário - limpa localStorage do usuário anterior
   const lastUserId = localStorage.getItem('bc_last_user_id');
   const currentUserId = bcUser ? bcUser.id : null;
   if (currentUserId && lastUserId && lastUserId !== currentUserId) {
-    // Usuário diferente — limpa todos os dados locais
+    // Usuário diferente - limpa todos os dados locais
     const keysToKeep = ['bc_token', 'bc_user_data', 'bc_last_user_id', 'admin_config'];
     const allKeys = Object.keys(localStorage);
     allKeys.forEach(k => { if (!keysToKeep.includes(k)) localStorage.removeItem(k); });
@@ -2738,7 +2743,7 @@ async function carregarDadosApp() {
     if (cfgTema        !== null) localStorage.setItem('cfg_tema',         cfgTema);
 
   } catch(e) {
-    // Offline — usa dados locais existentes
+    // Offline - usa dados locais existentes
     bets         = JSON.parse(localStorage.getItem('apostas_bets')  || '[]');
     bancaInicial = parseFloat(localStorage.getItem('apostas_banca') || '0');
     sites        = JSON.parse(localStorage.getItem('mbk_sites')     || '[]');
@@ -2767,7 +2772,7 @@ async function carregarDadosApp() {
   new ResizeObserver(updatePadding).observe(hdr);
 };
 
-// ─── TABS ─────────────────────────────────────────────────────────────
+// --- TABS -------------------------------------------------------------
 const TAB_ORDER = ['lancar', 'apostas', 'sites', 'stats'];
 
 function showTab(id, fromSwipe) {
@@ -2804,7 +2809,7 @@ function showTab(id, fromSwipe) {
       setTimeout(() => { next.style.transform = ''; next.style.opacity = ''; next.style.transition = ''; }, 280);
     });
   } else {
-    // Instant switch for tab clicks — no animation lag
+    // Instant switch for tab clicks - no animation lag
     document.querySelectorAll('.section').forEach(s => {
       s.classList.remove('active');
       s.style.transform = '';
@@ -2818,7 +2823,7 @@ function showTab(id, fromSwipe) {
   if (id === 'sites') renderSites();
 }
 
-// ─── SWIPE NAVIGATION ─────────────────────────────────────────────────
+// --- SWIPE NAVIGATION -------------------------------------------------
 (function() {
   let sx = 0, sy = 0, sTime = 0;
   const THRESHOLD = 50, MAX_Y = 80, MAX_TIME = 400;
@@ -2841,8 +2846,8 @@ function showTab(id, fromSwipe) {
   }, { passive: true });
 })();
 
-// ─── PREVIEW ──────────────────────────────────────────────────────────
-// ─── MÚLTIPLA ─────────────────────────────────────────────────────────
+// --- PREVIEW ----------------------------------------------------------
+// --- MÚLTIPLA ---------------------------------------------------------
 let _multiplaOn = false;
 let _selecoes = []; // [{jogo, odd}]
 
@@ -2970,7 +2975,7 @@ function updateMultiplaPreview() {
 
 function getMultiplaJogos() {
   if (!_multiplaOn || _selecoes.length === 0) return '';
-  return _selecoes.filter(s => s.jogo.trim()).map(s => (s.esporte ? s.esporte.trim() + ' — ' : '') + s.jogo.trim()).join(' + ');
+  return _selecoes.filter(s => s.jogo.trim()).map(s => (s.esporte ? s.esporte.trim() + ' - ' : '') + s.jogo.trim()).join(' + ');
 }
 
 function calcMultiplaPreview() {
@@ -3035,7 +3040,7 @@ function resetMultipla() {
   if (btnAdd) btnAdd.style.display = '';
 }
 
-// ─── SUPER AUMENTADA ───────────────────────────────────────────────
+// --- SUPER AUMENTADA -----------------------------------------------
 let _superOn = false;
 
 function toggleSuper() {
@@ -3088,7 +3093,7 @@ function calcSuperPreview() {
 }
 
 const _esportes = [
-  // ── FUTEBOL GRANDES LIGAS ─────────────────────────────────────
+  // -- FUTEBOL GRANDES LIGAS -------------------------------------
   'Futebol - Premier League',
   'Futebol - La Liga',
   'Futebol - Bundesliga',
@@ -3116,7 +3121,7 @@ const _esportes = [
   'Futebol - Ukrainian Premier League',
   'Futebol - Israeli Premier League',
   'Futebol - Süper Lig',
-  // ── FUTEBOL COPAS EUROPEIAS ───────────────────────────────────
+  // -- FUTEBOL COPAS EUROPEIAS -----------------------------------
   'Futebol - Champions League',
   'Futebol - Europa League',
   'Futebol - Conference League',
@@ -3131,7 +3136,7 @@ const _esportes = [
   'Futebol - Copa da Holanda',
   'Futebol - Copa da Turquia',
   'Futebol - Copa da Áustria',
-  // ── FUTEBOL AMERICAS ─────────────────────────────────────────
+  // -- FUTEBOL AMERICAS -----------------------------------------
   'Futebol - Brasileirão Série A',
   'Futebol - Brasileirão Série B',
   'Futebol - Copa do Brasil',
@@ -3143,14 +3148,14 @@ const _esportes = [
   'Futebol - Copa do Mundo',
   'Futebol - Eliminatórias Sul-Americanas',
   'Futebol - Amistoso Internacional',
-  // ── FUTEBOL ÁSIA/AFRICA ───────────────────────────────────────
+  // -- FUTEBOL ÁSIA/AFRICA ---------------------------------------
   'Futebol - AFC Champions League',
   'Futebol - Saudi Pro League',
   'Futebol - J-League (Japão)',
   'Futebol - K-League (Coreia)',
   'Futebol - Chinese Super League',
   'Futebol - CAF Champions League',
-  // ── LIGAS ADICIONAIS SOLICITADAS ───────────────────────────────
+  // -- LIGAS ADICIONAIS SOLICITADAS -------------------------------
   // República Tcheca
   'Futebol - República Tcheca HET Liga',
   'Futebol - República Tcheca 2ª Liga',
@@ -3187,7 +3192,7 @@ const _esportes = [
   'Futebol - Bulgária Parva Liga',
   'Futebol - Bulgária Segunda Liga',
   'Futebol - Bulgária Copa da Bulgária',
-  // ── EUROPA EXTRA ─────────────────────────────────────────────
+  // -- EUROPA EXTRA ---------------------------------------------
   // Bélgica
   'Futebol - Bélgica Pro League',
   'Futebol - Bélgica Challenger Pro League',
@@ -3234,7 +3239,7 @@ const _esportes = [
   'Futebol - Belarus Vysheyshaya Liga',
   // Arménia
   'Futebol - Armênia Premier League',
-  // ── ORIENTE MÉDIO / ÁSIA EXTRA ───────────────────────────────
+  // -- ORIENTE MÉDIO / ÁSIA EXTRA -------------------------------
   // Iraque
   'Futebol - Iraque Premier League',
   // Síria
@@ -3261,7 +3266,7 @@ const _esportes = [
   'Futebol - Filipinas PFL',
   // Myanmar
   'Futebol - Myanmar National League',
-  // ── ÁFRICA EXTRA ─────────────────────────────────────────────
+  // -- ÁFRICA EXTRA ---------------------------------------------
   // Moçambique
   'Futebol - Moçambique Mocambola',
   // Zimbábue
@@ -3284,7 +3289,7 @@ const _esportes = [
   'Futebol - Líbia Premier League',
   // Sudão
   'Futebol - Sudão Premier League',
-  // ── AMÉRICAS EXTRA ───────────────────────────────────────────
+  // -- AMÉRICAS EXTRA -------------------------------------------
   // Chile
   'Futebol - Chile Primera B',
   // Colômbia
@@ -3304,7 +3309,7 @@ const _esportes = [
   // República Dominicana
   'Futebol - República Dominicana LDF',
 
-  // ── EUROPA - LIGAS NACIONAIS (EXTRA) ─────────────────────────
+  // -- EUROPA - LIGAS NACIONAIS (EXTRA) -------------------------
   'Futebol - Escócia Premiership',
   'Futebol - Polônia Ekstraklasa Divisão 1',
   'Futebol - Albânia SuperLiga',
@@ -3328,7 +3333,7 @@ const _esportes = [
   'Futebol - Moldávia National Division',
   'Futebol - Montenegro Primeira Liga',
   'Futebol - País de Gales Premier League',
-  // ── ORIENTE MÉDIO / ÁSIA ─────────────────────────────────────
+  // -- ORIENTE MÉDIO / ÁSIA -------------------------------------
   'Futebol - Arábia Saudita Liga Pro (SPL)',
   'Futebol - Egito Premier League',
   'Futebol - Emirados Árabes UAE Pro League',
@@ -3342,7 +3347,7 @@ const _esportes = [
   'Futebol - Malásia Super League',
   'Futebol - Cazaquistão Premier League',
   'Futebol - Uzbequistão Oliy Liga',
-  // ── AMÉRICAS ─────────────────────────────────────────────────
+  // -- AMÉRICAS -------------------------------------------------
   'Futebol - Argentina Primera División',
   'Futebol - Argentina Copa de la Liga',
   'Futebol - Chile Primera División',
@@ -3359,14 +3364,14 @@ const _esportes = [
   'Futebol - Honduras Liga Nacional',
   'Futebol - El Salvador Primera División',
   'Futebol - Estados Unidos USL Championship',
-  // ── ÁFRICA ───────────────────────────────────────────────────
+  // -- ÁFRICA ---------------------------------------------------
   'Futebol - Marrocos Botola Pro',
   'Futebol - Tunísia Ligue Professionnelle 1',
   'Futebol - África do Sul PSL',
   'Futebol - Nigéria NPFL',
   'Futebol - Ghana Premier League',
   'Futebol - Senegal Ligue 1',
-  // ── COPAS E COMPETIÇÕES INTERNACIONAIS ───────────────────────
+  // -- COPAS E COMPETIÇÕES INTERNACIONAIS -----------------------
   'Futebol - UEFA Nations League',
   'Futebol - Copa América',
   'Futebol - Gold Cup (CONCACAF)',
@@ -3381,7 +3386,7 @@ const _esportes = [
   'Futebol - Community Shield (Inglaterra)',
   'Futebol - Copa Suruga Bank',
   'Futebol - Copa de Interligas',
-  // ── BRASIL (EXTRA) ───────────────────────────────────────────
+  // -- BRASIL (EXTRA) -------------------------------------------
   'Futebol - Brasileirão Série C',
   'Futebol - Brasileirão Série D',
   'Futebol - Campeonato Paulista',
@@ -3396,16 +3401,16 @@ const _esportes = [
   'Futebol - Campeonato Alagoano',
   'Futebol - Campeonato Potiguar',
   'Futebol - Supercopa do Brasil',
-  // ── ESTADOS UNIDOS (EXTRA) ───────────────────────────────────────
+  // -- ESTADOS UNIDOS (EXTRA) ---------------------------------------
   'Futebol - MLS Pro Next',
   'Futebol - USL League One',
   'Futebol - USL League Two',
   'Futebol - Copa da USL',
   'Futebol - NWSL Feminino',
-  // ── ILHAS FAROÉ ──────────────────────────────────────────────────
+  // -- ILHAS FAROÉ --------------------------------------------------
   'Futebol - Ilhas Faroé Premier League',
   'Futebol - Ilhas Faroé Copa',
-  // ── INGLATERRA (PIRÂMIDE COMPLETA) ───────────────────────────────
+  // -- INGLATERRA (PIRÂMIDE COMPLETA) -------------------------------
   'Futebol - Inglaterra Premier League',
   'Futebol - Inglaterra Championship (2ª)',
   'Futebol - Inglaterra League One (3ª)',
@@ -3415,26 +3420,26 @@ const _esportes = [
   'Futebol - Inglaterra National League South (6ª)',
   'Futebol - Inglaterra FA Cup',
   'Futebol - Inglaterra EFL Cup (Carabao)',
-  // ── JAMAICA ──────────────────────────────────────────────────────
+  // -- JAMAICA ------------------------------------------------------
   'Futebol - Jamaica Premier League',
   'Futebol - Jamaica Copa',
-  // ── LETÔNIA ──────────────────────────────────────────────────────
+  // -- LETÔNIA ------------------------------------------------------
   'Futebol - Letônia Virsliga (1ª)',
   'Futebol - Letônia 1. Liga (2ª)',
   'Futebol - Letônia Copa',
-  // ── LITUÂNIA ─────────────────────────────────────────────────────
+  // -- LITUÂNIA -----------------------------------------------------
   'Futebol - Lituânia A Lyga (1ª)',
   'Futebol - Lituânia 1 Lyga (2ª)',
   'Futebol - Lituânia Copa',
-  // ── MALTA ────────────────────────────────────────────────────────
+  // -- MALTA --------------------------------------------------------
   'Futebol - Malta Premier League',
   'Futebol - Malta Challenge Cup',
   'Futebol - Malta FA Trophy',
-  // ── LUXEMBURGO ───────────────────────────────────────────────────
+  // -- LUXEMBURGO ---------------------------------------------------
   'Futebol - Luxemburgo BGL Ligue (1ª)',
   'Futebol - Luxemburgo Division de Promotion (2ª)',
   'Futebol - Luxemburgo Copa',
-  // ── OUTRAS LIGAS EUROPEIAS ───────────────────────────────────────
+  // -- OUTRAS LIGAS EUROPEIAS ---------------------------------------
   'Futebol - Andorra Primera Divisió',
   'Futebol - Kosovo Superliga',
   'Futebol - Kosovo Copa',
@@ -3451,7 +3456,7 @@ const _esportes = [
   'Futebol - Geórgia Erovnuli Liga',
   'Futebol - Estônia Meistriliiga',
   'Futebol - Estônia Copa',
-  // ── OUTROS ESPORTES ──────────────────────────────────────────
+  // -- OUTROS ESPORTES ------------------------------------------
   'Tênis - ATP',
   'Tênis - WTA',
   'Tênis - Grand Slam',
@@ -3503,7 +3508,7 @@ function hideEsporteSugestoes() {
   if (drop) drop.style.display = 'none';
 }
 
-// ─── CALENDAR STRIP ───────────────────────────────────────────────
+// --- CALENDAR STRIP -----------------------------------------------
 function toggleCalStrip() {
   const strip = document.getElementById('calStrip');
   const btn = document.getElementById('calStripToggle');
@@ -3600,10 +3605,10 @@ function scrollToTop(tabId) {
 }
 
 
-// ── MERCADO AUTOCOMPLETE ─────────────────────────────────────
+// -- MERCADO AUTOCOMPLETE -------------------------------------
 const MERCADOS_SUGERIDOS = [
   // Over/Under Gols
-  'Over/Under — Gols','Over 0.5','Over 1.5','Over 2.5','Over 3.5','Over 4.5',
+  'Over/Under - Gols','Over 0.5','Over 1.5','Over 2.5','Over 3.5','Over 4.5',
   'Under 0.5','Under 1.5','Under 2.5','Under 3.5','Under 4.5',
   'Total de Gols','Mais/Menos Gols',
   // Resultado Final
@@ -3616,16 +3621,16 @@ const MERCADOS_SUGERIDOS = [
   'Handicap Asiático -2.0','Handicap Asiático +2.0',
   'Handicap Europeu','Handicap -1','Handicap +1','Handicap -2','Handicap +2',
   // 1º Tempo
-  'Gols — 1º Tempo','Over 0.5 1º Tempo','Over 1.5 1º Tempo','Over 2.5 1º Tempo',
+  'Gols - 1º Tempo','Over 0.5 1º Tempo','Over 1.5 1º Tempo','Over 2.5 1º Tempo',
   'Under 0.5 1º Tempo','Under 1.5 1º Tempo','Resultado 1º Tempo','1X2 1º Tempo',
   'Vencer 1º Tempo','Vencedor 1º Tempo',
   // Ambas Marcam
-  'Ambas Marcam','BTTS — Sim','BTTS — Não','Both Teams to Score',
+  'Ambas Marcam','BTTS - Sim','BTTS - Não','Both Teams to Score',
   'Ambas Marcam + Over 2.5','Ambas Marcam + Resultado Final',
   // Escanteios
-  'Escanteios — Jogo','Total Escanteios','Over 8.5 Escanteios','Over 9.5 Escanteios',
+  'Escanteios - Jogo','Total Escanteios','Over 8.5 Escanteios','Over 9.5 Escanteios',
   'Over 10.5 Escanteios','Under 8.5 Escanteios','Under 9.5 Escanteios',
-  'Escanteios — Time 1','Escanteios — Time 2','Escanteios 1º Tempo',
+  'Escanteios - Time 1','Escanteios - Time 2','Escanteios 1º Tempo',
   // Cartões
   'Cartões','Total de Cartões','Over 2.5 Cartões','Over 3.5 Cartões','Over 4.5 Cartões',
   'Under 2.5 Cartões','Under 3.5 Cartões','Mais/Menos Cartões',
@@ -3634,7 +3639,7 @@ const MERCADOS_SUGERIDOS = [
   'Finalizações','Total de Chutes','Finalizações Time 1','Finalizações Time 2',
   'Chutes ao Gol','Finalizações 1º Tempo',
   // Gols por Time
-  'Gols — Time 1','Gols — Time 2','Time 1 Marcar','Time 2 Marcar',
+  'Gols - Time 1','Gols - Time 2','Time 1 Marcar','Time 2 Marcar',
   'Over 0.5 Time 1','Over 1.5 Time 1','Over 0.5 Time 2','Over 1.5 Time 2',
   // Dupla Chance
   'Dupla Chance','1X','X2','12',
@@ -3683,7 +3688,7 @@ function hideMercadoSuggestions() {
   const dd = document.getElementById('mercadoDropdown');
   if (dd) dd.style.display = 'none';
 }
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 
 function updateQualidade(val) {
   val = parseInt(val);
@@ -3700,15 +3705,15 @@ function updateQualidade_DISABLED(val) {
   const emoji = document.getElementById('qualidadeEmoji');
   const msg = document.getElementById('qualidadeMsg');
   const msgs = [
-    ['','Entrada emocional — não lance!'],
-    ['','Muito impulsivo — reconsidere'],
-    ['','Entrada fraca — cuidado'],
+    ['','Entrada emocional - não lance!'],
+    ['','Muito impulsivo - reconsidere'],
+    ['','Entrada fraca - cuidado'],
     ['','Abaixo do ideal'],
-    ['','Razoável — mas há dúvidas'],
+    ['','Razoável - mas há dúvidas'],
     ['','Ok, mas pode melhorar'],
     ['','Boa entrada'],
     ['','Entrada sólida'],
-    ['','Entrada forte — confiante'],
+    ['','Entrada forte - confiante'],
     ['','Excelente entrada!'],
     ['','Entrada perfeita!']
   ];
@@ -3824,7 +3829,7 @@ function calcPreview() {
   box.classList.toggle('active', odd > 0 && entrada > 0);
 }
 
-// ─── ADD BET ──────────────────────────────────────────────────────────
+// --- ADD BET ----------------------------------------------------------
 let _pendingBetStatus = null;
 
 function addBet(status) {
@@ -3844,7 +3849,7 @@ function addBet(status) {
 
   if (!data || !odd || !jogo || !entrada) { showToast('Preencha data, odd, jogo e entrada!'); return; }
 
-  // ── STAKE CHECK ──────────────────────────────────────────────────
+  // -- STAKE CHECK --------------------------------------------------
   const lucroTotal = bets.filter(b=>b.status==='win'||b.status==='loss').reduce((a,b)=>a+b.lucro,0);
   const bancaAtual = bancaInicial + lucroTotal;
   const stakePerc = bancaAtual > 0 ? (entrada / bancaAtual) * 100 : 0;
@@ -3862,11 +3867,11 @@ function addBet(status) {
     return;
   }
 
-  // ── AUTOCONTROLE CHECK ─────────────────────────────────────────────
+  // -- AUTOCONTROLE CHECK ---------------------------------------------
   const ac = checkAutocontrole(entrada);
   if (ac.msg) {
     showAutocontroleAviso(ac.msg, ac.bloqueado, () => {
-      // ── STOP LOSS CHECK ───────────────────────────────────────────────
+      // -- STOP LOSS CHECK -----------------------------------------------
       const todayLosses = getTodayLosses();
       if (todayLosses >= 3 && status !== 'in-play' && status !== 'anulado') {
         _pendingBetStatus = status;
@@ -3878,7 +3883,7 @@ function addBet(status) {
     return;
   }
 
-  // ── STOP LOSS CHECK ───────────────────────────────────────────────
+  // -- STOP LOSS CHECK -----------------------------------------------
   const todayLosses = getTodayLosses();
   if (todayLosses >= 3 && status !== 'in-play' && status !== 'anulado') {
     _pendingBetStatus = status;
@@ -3953,7 +3958,7 @@ function commitBet(status) {
   save();
   render();
   updateAutocontroleStatus();
-  showToast('Aposta salva como ' + status.toUpperCase() + (isMultipla ? ' (Múltipla)' : '') + (siteName ? ' — ' + siteName : '') + '!');
+  showToast('Aposta salva como ' + status.toUpperCase() + (isMultipla ? ' (Múltipla)' : '') + (siteName ? ' - ' + siteName : '') + '!');
 
   document.getElementById('fOdd').value = '';
   document.getElementById('fLiga').value = '';
@@ -4029,7 +4034,7 @@ function getConsecutiveLosses() {
   return count;
 }
 
-// ─── STATUS ───────────────────────────────────────────────────────────
+// --- STATUS -----------------------------------------------------------
 function setStatus(id, status) {
   const bet = bets.find(b => b.id === id);
   if (!bet) return;
@@ -4050,7 +4055,7 @@ function deleteBet(id) {
   });
 }
 
-// ─── FILTER ───────────────────────────────────────────────────────────
+// --- FILTER -----------------------------------------------------------
 function setFilter(f, el) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -4058,7 +4063,7 @@ function setFilter(f, el) {
   renderList();
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────
+// --- RENDER -----------------------------------------------------------
 function render() {
   renderMetrics();
   renderList();
@@ -4121,7 +4126,7 @@ function updateStopLossUI() {
   const winBtn = document.querySelector('.btn-launch.win');
   const inplayBtn = document.querySelector('.btn-launch.in-play');
 
-  // Check meta diária 2% — update tab dot too
+  // Check meta diária 2% - update tab dot too
   const metaDot = document.getElementById('metaDiariaTabDot');
   const metaBar = document.getElementById('metaDiariaBar');
   if (metaBar) {
@@ -4233,7 +4238,7 @@ function renderList() {
     const jogoDisplay = isMultipla
       ? `<div style="font-size:9px;color:#64b4ff;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Múltipla · ${selObjList.length} seleções · ODD ${(bet.odd||0).toFixed(2)}</div>`
         + selObjList.map((s,i) => {
-            let jogoTxt = s.jogo || '—';
+            let jogoTxt = s.jogo || '-';
             if (jogoTxt.length > 34) jogoTxt = jogoTxt.slice(0,33) + '…';
             return `<div style="display:flex;align-items:center;gap:6px;line-height:1.4;margin-bottom:2px;">
               <span style="font-size:9px;color:var(--muted);min-width:14px;text-align:right;flex-shrink:0;font-family:'DM Mono',monospace;">${i+1}.</span>
@@ -4303,7 +4308,7 @@ function renderList() {
   document.getElementById('betsList').classList.toggle('select-mode', selectMode);
 }
 
-// ─── LONG PRESS ───────────────────────────────────────────────────────
+// --- LONG PRESS -------------------------------------------------------
 let _lpTimer = null;
 function startLongPress(id, e) {
   clearLongPress();
@@ -4348,7 +4353,7 @@ function openBetDetail(id) {
     jogoEl.innerHTML = bet.selecoes.map((s,i) =>
       `<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
         <span style="font-size:9px;color:var(--muted);min-width:14px;flex-shrink:0;">${i+1}.</span>
-        <span style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;">${s.jogo||'—'}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;">${s.jogo||'-'}</span>
         ${s.odd>0?`<span style="font-size:10px;color:var(--amarelo);font-family:'DM Mono',monospace;flex-shrink:0;">${s.odd.toFixed(2)}</span>`:''}
       </div>`
     ).join('');
@@ -4363,7 +4368,7 @@ function openBetDetail(id) {
     }
   } else {
     document.getElementById('bdLiga').textContent = bet.liga || '';
-    document.getElementById('bdJogo').textContent = bet.jogo || '—';
+    document.getElementById('bdJogo').textContent = bet.jogo || '-';
     document.getElementById('bdMercado').textContent = bet.mercado || '';
     document.getElementById('bdMercado').style.display = bet.mercado ? '' : 'none';
   }
@@ -4390,7 +4395,7 @@ function openBetDetail(id) {
   rEl.style.color = roi > 0 ? 'var(--verde)' : roi < 0 ? 'var(--vermelho)' : 'var(--muted)';
 
   // Format date
-  const d = bet.data ? bet.data.split('-').reverse().join('/') : '—';
+  const d = bet.data ? bet.data.split('-').reverse().join('/') : '-';
   document.getElementById('bdData').textContent = d;
   document.getElementById('bdTipo').textContent = bet.tipo || 'Pré jogo';
 
@@ -4402,7 +4407,7 @@ function openBetDetail(id) {
     const stColors = { win:'#00e676', loss:'#ff1744', anulado:'#607d8b', pendente:'var(--muted)' };
     const stBg = { win:'rgba(0,200,83,0.1)', loss:'rgba(255,23,68,0.1)', anulado:'rgba(96,125,139,0.1)', pendente:'transparent' };
     const stBorder = { win:'rgba(0,230,118,0.4)', loss:'rgba(255,23,68,0.4)', anulado:'rgba(96,125,139,0.4)', pendente:'var(--border)' };
-    const stLabel = { win:'WIN', loss:'LOSS', anulado:'REF.', pendente:'—' };
+    const stLabel = { win:'WIN', loss:'LOSS', anulado:'REF.', pendente:'-' };
     selList.innerHTML = sels.map((s,i) => {
       const st = s.status || 'pendente';
       return `<div style="background:var(--surface2);border:1.5px solid ${stBorder[st]};border-radius:9px;padding:9px 12px;transition:border-color 0.2s;">
@@ -4410,7 +4415,7 @@ function openBetDetail(id) {
           <div style="width:18px;height:18px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);font-weight:700;flex-shrink:0;">${i+1}</div>
           <div style="flex:1;min-width:0;">
             ${s.esporte?`<div style="font-size:9px;color:var(--muted);">${s.esporte}</div>`:''}
-            <div style="font-size:11px;color:var(--text);font-weight:600;line-height:1.3;">${s.jogo||'—'}</div>
+            <div style="font-size:11px;color:var(--text);font-weight:600;line-height:1.3;">${s.jogo||'-'}</div>
           </div>
           ${s.odd>0?`<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--amarelo);font-weight:700;flex-shrink:0;">${s.odd.toFixed(2)}</div>`:''}
         </div>
@@ -4577,7 +4582,7 @@ function toggleComissao() {
   document.getElementById('comissaoLabel').style.color = on ? '#64b4ff' : 'var(--muted)';
   if (on) {
     document.getElementById('comissaoPct').value = '';
-    document.getElementById('comissaoValor').textContent = '—';
+    document.getElementById('comissaoValor').textContent = '-';
     setTimeout(() => document.getElementById('comissaoPct').focus(), 100);
   }
 }
@@ -4587,7 +4592,7 @@ function calcComissaoPreview() {
   if (!bet) return;
   const pct = parseFloat(document.getElementById('comissaoPct').value) || 0;
   const valor = pct > 0 ? (bet.entrada * pct / 100) : 0;
-  document.getElementById('comissaoValor').textContent = valor > 0 ? 'R$ ' + valor.toFixed(2).replace('.',',') : '—';
+  document.getElementById('comissaoValor').textContent = valor > 0 ? 'R$ ' + valor.toFixed(2).replace('.',',') : '-';
   document.getElementById('comissaoValor').style.color = valor > 0 ? '#ff9800' : 'var(--muted)';
 }
 
@@ -4637,7 +4642,7 @@ function saveBetDetail() {
 
   save();
   render();
-  document.getElementById('bdJogo').textContent = bet.jogo || '—';
+  document.getElementById('bdJogo').textContent = bet.jogo || '-';
   document.getElementById('bdMercado').textContent = bet.mercado || '';
   document.getElementById('bdMercado').style.display = bet.mercado ? '' : 'none';
   showToast('Aposta atualizada! ✅');
@@ -4676,7 +4681,7 @@ function setStatusFromDetail(status) {
   openBetDetail(_detailBetId); // refresh
 }
 
-// ─── STATS ────────────────────────────────────────────────────────────
+// --- STATS ------------------------------------------------------------
 function drawChart() {
   const canvas = document.getElementById('bancaChart');
   const ctx = canvas.getContext('2d');
@@ -4804,7 +4809,7 @@ function drawChart() {
     ctx.setLineDash([]);
   }
 
-  // Candles — width proportional to available space, max 28px
+  // Candles - width proportional to available space, max 28px
   const maxCandleW = Math.min(28, (cw / candles.length) * 0.6);
   const candleW = Math.max(6, maxCandleW);
 
@@ -4838,7 +4843,7 @@ function drawChart() {
     ctx.fillStyle = color;
     ctx.fillRect(x - thisW / 2, bodyTop, thisW, bodyH);
 
-    // Bet number below candle — skip if too crowded
+    // Bet number below candle - skip if too crowded
     const total = candles.length;
     const minSpacing = 12; // minimum px between labels
     const slotW = cw / total;
@@ -4866,8 +4871,8 @@ function drawChart() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // ── LINEAR REGRESSION ──────────────────────────────────────────────
-  // Uses the actual banca values (points array) — index as X, value as Y
+  // -- LINEAR REGRESSION ----------------------------------------------
+  // Uses the actual banca values (points array) - index as X, value as Y
   const n = points.length;
   if (n >= 3) {
     // Least squares: y = a + b*x
@@ -4994,7 +4999,7 @@ function updateStats() {
   rEl.textContent = (roi >= 0 ? '+' : '') + (roi * 100).toFixed(2) + '%';
   rEl.style.color = roi >= 0 ? 'var(--verde)' : 'var(--vermelho)';
 
-  // ── EDGE CALCULATION ─────────────────────────────────────────────
+  // -- EDGE CALCULATION ---------------------------------------------
   // Edge = (Taxa de acerto × Odd média) - 1
   // Positive edge means the bettor has an advantage over the bookmaker
   const edgeEl   = document.getElementById('sEdge');
@@ -5033,7 +5038,7 @@ function updateStats() {
       '<strong style="color:var(--text)">' + oddMedia.toFixed(2) + '</strong> − 1 = ' +
       '<strong style="color:' + edgeEl.style.color + '">' + edgeStr + '</strong>';
   } else {
-    edgeEl.textContent = '—';
+    edgeEl.textContent = '-';
     edgeBar.style.width = '0%';
     edgeBadge.style.display = 'none';
     edgeFormula.textContent = 'Registre ao menos 2 apostas finalizadas para calcular o Edge.';
@@ -5048,10 +5053,10 @@ function updateStats() {
   document.getElementById('sTotalApostado').textContent = 'R$ ' + totalApostado.toFixed(2).replace('.', ',');
   document.getElementById('sTotalPerdido').textContent  = totalPerdido > 0 ? '-R$ ' + totalPerdido.toFixed(2).replace('.', ',') : 'R$ 0,00';
 
-  // ── META ROI ──────────────────────────────────────────────────────
+  // -- META ROI ------------------------------------------------------
   updateMetaRoi(roi, lucroTotal, totalEntrada, wins.length + losses.length);
 
-  // ── BREAK-EVEN ────────────────────────────────────────────────────
+  // -- BREAK-EVEN ----------------------------------------------------
   // Break-Even = 1 / Odd Média  (minimum win rate to not lose money)
   // Compare with actual acerto to show if above/below the margin
   const beEl    = document.getElementById('sBreakEven');
@@ -5100,7 +5105,7 @@ function updateStats() {
     beCard.style.background = isAbove ? '' : 'rgba(255,23,68,0.04)';
 
   } else {
-    beEl.textContent = '—';
+    beEl.textContent = '-';
     beBar.style.width = '0%';
     beMarker.style.display = 'none';
     beBadge.style.display = 'none';
@@ -5117,32 +5122,32 @@ function normalizeMercado(m) {
   if (!m) return null;
   const ml = m.toLowerCase().trim();
 
-  // 1. DUPLA CHANCE — 1X ou X2 ou 12
+  // 1. DUPLA CHANCE - 1X ou X2 ou 12
   if (/dupla.chance|double.chance|1x|x2|12/.test(ml)) return 'Dupla Chance';
 
-  // 2. HANDICAP ASIÁTICO — linhas específicas (-0.5, +1.0, etc.)
+  // 2. HANDICAP ASIÁTICO - linhas específicas (-0.5, +1.0, etc.)
   if (/handicap\s*asi[aá]tico|asian\s*handicap|[+-]?[0-9]+[,.]?[05]?\s*(handicap|hc|ah)|handicap.*([-+][0-9])|ah\s*[-+0-9]/.test(ml)) return 'Handicap Asiático';
   if (/handicap/.test(ml)) return 'Handicap Asiático';
 
-  // 3. ESCANTEIOS — jogo, time 1 ou time 2
-  if (/escanteio.*jogo|total.*escanteio.*jogo|corner.*match/.test(ml)) return 'Escanteios — Jogo';
-  if (/escanteio.*(time|equipe|club|clube|home|away|1|2)|total.*escanteio.*(time|equipe)|corner.*(time|team)/.test(ml)) return 'Escanteios — Time';
-  if (/escanteio|corner/.test(ml)) return 'Escanteios — Jogo';
+  // 3. ESCANTEIOS - jogo, time 1 ou time 2
+  if (/escanteio.*jogo|total.*escanteio.*jogo|corner.*match/.test(ml)) return 'Escanteios - Jogo';
+  if (/escanteio.*(time|equipe|club|clube|home|away|1|2)|total.*escanteio.*(time|equipe)|corner.*(time|team)/.test(ml)) return 'Escanteios - Time';
+  if (/escanteio|corner/.test(ml)) return 'Escanteios - Jogo';
 
-  // 4. CHUTES / FINALIZAÇÕES — time 1 ou time 2
+  // 4. CHUTES / FINALIZAÇÕES - time 1 ou time 2
   if (/chut|finaliz|shot/.test(ml)) return 'Finalizações';
 
-  // 5. GOLS 1º TEMPO — mais/menos + linha (0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5)
-  if (/(gols?|total).*1[°º]?\s*tempo|(1[°º]?\s*tempo|primeiro\s*tempo|half).*(gols?|over|under|mais|menos)/.test(ml)) return 'Gols — 1º Tempo';
+  // 5. GOLS 1º TEMPO - mais/menos + linha (0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5)
+  if (/(gols?|total).*1[°º]?\s*tempo|(1[°º]?\s*tempo|primeiro\s*tempo|half).*(gols?|over|under|mais|menos)/.test(ml)) return 'Gols - 1º Tempo';
 
-  // 6. VENCER 1º TEMPO — time 1 ou time 2
+  // 6. VENCER 1º TEMPO - time 1 ou time 2
   if (/(vencer|ganhar|win).*(1[°º]?\s*tempo|primeiro\s*tempo|half)|(1[°º]?\s*tempo|primeiro\s*tempo|half).*(vencer|ganhar|win|resultado)/.test(ml)) return 'Vencer 1º Tempo';
 
-  // 7. GOLS TIME — time 1 ou time 2 (total de gols do time)
-  if (/(time|equipe|home|away|team).*(gols?|total.*gol|mais|menos)|(gols?|total.*gol).*(time|equipe|home|away|team)/.test(ml)) return 'Gols — Time';
+  // 7. GOLS TIME - time 1 ou time 2 (total de gols do time)
+  if (/(time|equipe|home|away|team).*(gols?|total.*gol|mais|menos)|(gols?|total.*gol).*(time|equipe|home|away|team)/.test(ml)) return 'Gols - Time';
 
-  // 8. OVER/UNDER GOLS — jogo inteiro
-  if (/over|under|total de gols?|total gols?|mais [0-9]|menos [0-9]/.test(ml)) return 'Over/Under — Gols';
+  // 8. OVER/UNDER GOLS - jogo inteiro
+  if (/over|under|total de gols?|total gols?|mais [0-9]|menos [0-9]/.test(ml)) return 'Over/Under - Gols';
 
   // 9. RESULTADO FINAL
   if (/resultado\s*final|match\s*result|moneyline|vencedor\s*da\s*partida|1x2/.test(ml)) return 'Resultado Final';
@@ -5157,7 +5162,7 @@ function normalizeMercado(m) {
   return null;
 }
 
-// ── Build mercado map including individual múltipla selections ───────
+// -- Build mercado map including individual múltipla selections -------
 // For múltiplas, each selection contributes its own mercado win/loss
 // proportionally (we use 1 virtual "count" per selection, lucro = 0
 // since the financial P&L is on the parent bet)
@@ -5350,22 +5355,22 @@ function openMercadosRelatorio() {
   <div class="sec-title" style="color:#607d8b;margin-top:8px;">📋 Mercados Reconhecidos</div>
   <div style="background:#111720;border:1px solid #1e2d42;border-radius:9px;padding:12px;font-size:10px;color:#607d8b;line-height:2;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">
-      <div><span style="color:#ffd600;font-weight:700;">Over/Under — Gols</span><br><span style="color:#415a70;">Over, Under, Total de gols, Mais/Menos X.X</span></div>
+      <div><span style="color:#ffd600;font-weight:700;">Over/Under - Gols</span><br><span style="color:#415a70;">Over, Under, Total de gols, Mais/Menos X.X</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Resultado Final</span><br><span style="color:#415a70;">Resultado Final, Match Result, 1X2, Moneyline</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Handicap Asiático</span><br><span style="color:#415a70;">Handicap Asiático, AH, -0.5 a -3.5, +0.5 a +3.5</span></div>
-      <div><span style="color:#ffd600;font-weight:700;">Gols — 1º Tempo</span><br><span style="color:#415a70;">Total de gols 1º tempo, Mais/Menos 0.5 a 3.5</span></div>
-      <div><span style="color:#ffd600;font-weight:700;">Escanteios — Jogo</span><br><span style="color:#415a70;">Total escanteios jogo, Over/Under escanteios</span></div>
-      <div><span style="color:#ffd600;font-weight:700;">Escanteios — Time</span><br><span style="color:#415a70;">Total escanteios Time 1 ou Time 2</span></div>
+      <div><span style="color:#ffd600;font-weight:700;">Gols - 1º Tempo</span><br><span style="color:#415a70;">Total de gols 1º tempo, Mais/Menos 0.5 a 3.5</span></div>
+      <div><span style="color:#ffd600;font-weight:700;">Escanteios - Jogo</span><br><span style="color:#415a70;">Total escanteios jogo, Over/Under escanteios</span></div>
+      <div><span style="color:#ffd600;font-weight:700;">Escanteios - Time</span><br><span style="color:#415a70;">Total escanteios Time 1 ou Time 2</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Finalizações</span><br><span style="color:#415a70;">Total de chutes, Finalizações Time 1 ou Time 2</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Vencer 1º Tempo</span><br><span style="color:#415a70;">Time 1 ou Time 2 vencer o 1º tempo</span></div>
-      <div><span style="color:#ffd600;font-weight:700;">Gols — Time</span><br><span style="color:#415a70;">Total de gols do Time 1 ou Time 2</span></div>
+      <div><span style="color:#ffd600;font-weight:700;">Gols - Time</span><br><span style="color:#415a70;">Total de gols do Time 1 ou Time 2</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Dupla Chance</span><br><span style="color:#415a70;">Dupla Chance, 1X, X2, 12</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Ambas Marcam</span><br><span style="color:#415a70;">Ambas marcam, BTTS, Both teams to score</span></div>
       <div><span style="color:#ffd600;font-weight:700;">Cartões</span><br><span style="color:#415a70;">Total de cartões, Mais/Menos cartões</span></div>
     </div>
   </div>
 
-  <div class="footer" style="margin-top:12px;">Bet Control — Análise de Mercados</div>
+  <div class="footer" style="margin-top:12px;">Bet Control - Análise de Mercados</div>
 </body>
 </html>`;
 
@@ -5400,9 +5405,9 @@ function shareMercadosRelatorio() {
     const roi = v.entrada>0?(v.lucro/v.entrada*100):0;
     return nome+': '+(v.lucro>=0?'+':'')+'R$ '+v.lucro.toFixed(2)+' | '+total+' apostas | Acerto '+ac.toFixed(0)+'% | ROI '+(roi>=0?'+':'')+roi.toFixed(1)+'%';
   }).join('\n');
-  const texto = '📊 BET CONTROL — Mercados '+hoje+'\n━━━━━━━━━━━━━━\n'+linhas;
+  const texto = '📊 BET CONTROL - Mercados '+hoje+'\n━━━━━━━━━━━━━━\n'+linhas;
   if (navigator.share) {
-    navigator.share({ title:'MyBankroll — Mercados', text:texto }).catch(()=>fallbackCopy(texto));
+    navigator.share({ title:'MyBankroll - Mercados', text:texto }).catch(()=>fallbackCopy(texto));
   } else { fallbackCopy(texto); }
 }
 
@@ -5431,7 +5436,7 @@ function confirmBancaEdit() {
   showToast('Banca atualizada!');
 }
 
-// ─── OBSERVAÇÕES ──────────────────────────────────────────────────────
+// --- OBSERVAÇÕES ------------------------------------------------------
 function loadObs() {
   const saved = localStorage.getItem('apostas_obs') || '(AMBAS), pois não é o meu forte, preciso evitar mais essa entrada. (ODDS), 1,45 a 1,75, em que eu mais acerto, tenho que focar nessas cotas';
   document.getElementById('obsText').textContent = saved;
@@ -5455,7 +5460,7 @@ function saveObs() {
   const val = document.getElementById('obsTextarea').value.trim();
   localStorage.setItem('apostas_obs', val);
   supaSet('apostas_obs', val);
-  document.getElementById('obsText').textContent = val || '—';
+  document.getElementById('obsText').textContent = val || '-';
   toggleObs();
   showToast('Observação salva!');
 }
@@ -5477,13 +5482,13 @@ function confirmNo() {
   _confirmCb = null;
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────────
+// --- HELPERS ----------------------------------------------------------
 function formatDate(d) {
   const [y, m, day] = d.split('-');
   return `${day}/${m}/${y}`;
 }
 
-// ─── SITES ────────────────────────────────────────────────────────────
+// --- SITES ------------------------------------------------------------
 let sites = JSON.parse(localStorage.getItem('mbk_sites') || '[]');
 let _editSiteId = null;
 let _histSiteId = null;
@@ -5595,7 +5600,7 @@ function openSiteHist(id) {
   if (!s) return;
   _histSiteId = id;
   _histFilter = 'todos';
-  document.getElementById('histModalTitle').textContent = s.nome.toUpperCase() + ' — HISTÓRICO';
+  document.getElementById('histModalTitle').textContent = s.nome.toUpperCase() + ' - HISTÓRICO';
   document.getElementById('siteHistModal').style.display = 'flex';
   renderHistList();
 }
@@ -5714,7 +5719,7 @@ function shareBet(id) {
   const bet = bets.find(b => b.id === id);
   if (!bet) return;
 
-  // ── Calcular lucro na hora (não depender de bet.lucro que pode ser undefined)
+  // -- Calcular lucro na hora (não depender de bet.lucro que pode ser undefined)
   const entrada = parseFloat(bet.entrada) || 0;
   const odd     = parseFloat(bet.odd)     || 0;
   let lucro = 0;
@@ -5727,36 +5732,36 @@ function shareBet(id) {
     ? '+R$ ' + lucro.toFixed(2).replace('.', ',')
     : '-R$ ' + Math.abs(lucro).toFixed(2).replace('.', ',');
 
-  // ── Cores por status
+  // -- Cores por status
   const statusColor = { win: '#00e676', loss: '#ff1744', anulado: '#b0bec5', 'in-play': '#ffd600' };
   const statusLabel = { win: 'WIN', loss: 'LOSS', anulado: 'REFUNDED', 'in-play': 'IN PLAY' };
   const accentColor = statusColor[bet.status] || '#00e676';
   const label = statusLabel[bet.status] || '';
 
-  // ── Canvas
+  // -- Canvas
   const cw = 680, ch = 460;
   const cvs = document.createElement('canvas');
   cvs.width = cw; cvs.height = ch;
   const ctx = cvs.getContext('2d');
 
-  // ── Fundo escuro
+  // -- Fundo escuro
   ctx.fillStyle = '#0d1117';
   ctx.roundRect(0, 0, cw, ch, 20);
   ctx.fill();
 
-  // ── Barra lateral colorida
+  // -- Barra lateral colorida
   ctx.fillStyle = accentColor;
   ctx.beginPath();
   ctx.roundRect(0, 0, 7, ch, [20, 0, 0, 20]);
   ctx.fill();
 
-  // ── Borda externa
+  // -- Borda externa
   ctx.strokeStyle = accentColor + '55';
   ctx.lineWidth = 1.5;
   ctx.roundRect(0, 0, cw, ch, 20);
   ctx.stroke();
 
-  // ── Logo BETCONTROL (BET branco + CONTROL verde, sem espaço)
+  // -- Logo BETCONTROL (BET branco + CONTROL verde, sem espaço)
   ctx.font = 'bold 28px Impact, Arial Narrow, Arial, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
@@ -5765,19 +5770,19 @@ function shareBet(id) {
   ctx.fillStyle = '#00e676';
   ctx.fillText('CONTROL', 30 + betW, 54);
 
-  // ── Data
+  // -- Data
   ctx.font = '13px monospace';
   ctx.fillStyle = '#607d8b';
   ctx.textAlign = 'right';
   ctx.fillText(formatDate(bet.data), cw - 30, 44);
   ctx.textAlign = 'left';
 
-  // ── Linha divisória topo
+  // -- Linha divisória topo
   ctx.strokeStyle = accentColor + '44';
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(30, 70); ctx.lineTo(cw - 30, 70); ctx.stroke();
 
-  // ── Liga / Esporte
+  // -- Liga / Esporte
   let curY = 95;
   if (bet.liga) {
     ctx.font = 'bold 11px Arial, sans-serif';
@@ -5786,8 +5791,8 @@ function shareBet(id) {
     curY += 20;
   }
 
-  // ── Jogo (com quebra de linha)
-  const jogoText = bet.jogo || '—';
+  // -- Jogo (com quebra de linha)
+  const jogoText = bet.jogo || '-';
   ctx.font = 'bold 22px Arial, sans-serif';
   ctx.fillStyle = '#e8f0fe';
   const maxW = cw - 60;
@@ -5803,7 +5808,7 @@ function shareBet(id) {
   if (line) ctx.fillText(line, 30, lineY);
   curY = lineY + 16;
 
-  // ── Mercado pill + Badge de status na mesma linha
+  // -- Mercado pill + Badge de status na mesma linha
   const mercText = bet.mercado || '';
   const badgeLabels = { win: 'GANHOU', loss: 'PERDEU', anulado: 'REFUNDED', 'in-play': 'IN PLAY' };
   const badgeLabel = badgeLabels[bet.status] || label;
@@ -5823,7 +5828,7 @@ function shareBet(id) {
   ctx.fillText(badgeLabel, badgeX + badgeW / 2, badgeY + 17);
   ctx.textAlign = 'left';
 
-  // Mercado pill (esquerda) — mesma altura que o badge
+  // Mercado pill (esquerda) - mesma altura que o badge
   if (mercText) {
     ctx.font = 'bold 12px monospace';
     const maxMercW = badgeX - 40;
@@ -5839,18 +5844,18 @@ function shareBet(id) {
   }
   curY += 40;
 
-  // ── Linha divisória meio
+  // -- Linha divisória meio
   curY = Math.max(curY + 6, 220);
   ctx.strokeStyle = '#1e2d42';
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(30, curY); ctx.lineTo(cw - 30, curY); ctx.stroke();
   curY += 26;
 
-  // ── Row: ODD | ENTRADA | TIPO
+  // -- Row: ODD | ENTRADA | TIPO
   const stats = [
-    { label: 'ODD',     value: odd > 0 ? odd.toFixed(2) : '—' },
+    { label: 'ODD',     value: odd > 0 ? odd.toFixed(2) : '-' },
     { label: 'ENTRADA', value: 'R$ ' + entrada.toFixed(0) },
-    { label: 'TIPO',    value: bet.tipo || '—' },
+    { label: 'TIPO',    value: bet.tipo || '-' },
   ];
   stats.forEach((s, i) => {
     const x = 30 + i * 210;
@@ -5861,13 +5866,13 @@ function shareBet(id) {
   });
   curY += 48;
 
-  // ── Linha divisória antes do lucro
+  // -- Linha divisória antes do lucro
   ctx.strokeStyle = '#1e2d42';
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(30, curY); ctx.lineTo(cw - 30, curY); ctx.stroke();
   curY += 22;
 
-  // ── LUCRO LÍQUIDO — sempre renderizado aqui, garantido dentro do canvas
+  // -- LUCRO LÍQUIDO - sempre renderizado aqui, garantido dentro do canvas
   const lucroColor = lucroPos ? '#00e676' : '#ff1744';
   ctx.font = '11px monospace';
   ctx.fillStyle = '#607d8b';
@@ -5877,14 +5882,14 @@ function shareBet(id) {
   ctx.fillStyle = lucroColor;
   ctx.fillText(lucroStr, 30, curY);
 
-  // ── Tag betcontrol.app
+  // -- Tag betcontrol.app
   ctx.font = '11px monospace';
   ctx.fillStyle = '#263040';
   ctx.textAlign = 'right';
   ctx.fillText('betcontrol.app', cw - 30, ch - 14);
   ctx.textAlign = 'left';
 
-  // ── Exportar
+  // -- Exportar
   const dataUrl = cvs.toDataURL('image/png');
   cvs.toBlob(async blob => {
     const file = new File([blob], 'aposta-betcontrol.png', { type: 'image/png' });
@@ -5977,7 +5982,7 @@ function save() {
   supaSet('apostas_bets', betsJson);
 }
 
-// ─── ICON COLOR PICKER ───────────────────────────────────────────────
+// --- ICON COLOR PICKER -----------------------------------------------
 const ICON_COLORS = [
   { bg: 'linear-gradient(135deg,#003d1f,#001a0d)', color: '#00e676', label: 'Verde' },
   { bg: 'linear-gradient(135deg,#1a3a00,#0d1a00)', color: '#76ff03', label: 'Lima' },
@@ -6051,7 +6056,7 @@ function closeColorPicker() {
   _colorSiteId = null;
 }
 
-// ─── EXPORT ──────────────────────────────────────────────────────────
+// --- EXPORT ----------------------------------------------------------
 let _exportPeriod = 'todos';
 let _exportResult = 'todos';
 
@@ -6223,7 +6228,7 @@ function exportPDF() {
     const stColor = b.status==='loss'?'#fff':'#000';
     return `<div class="bet-row">
       <div class="bet-row-top">
-        <div class="bet-jogo">${b.jogo||'—'}</div>
+        <div class="bet-jogo">${b.jogo||'-'}</div>
         <div class="bet-lucro" style="color:${lcColor}">${lcStr}</div>
       </div>
       <div class="bet-row-mid">
@@ -6235,7 +6240,7 @@ function exportPDF() {
     </div>`;
   }).join('');
 
-  // ── Build mercados data for report ──
+  // -- Build mercados data for report --
   const mercMap = {};
   data.filter(b => b.mercado && b.mercado.trim() && (b.status==='win'||b.status==='loss')).forEach(b => {
     const key = normalizeMercado(b.mercado);
@@ -6332,7 +6337,7 @@ function exportPDF() {
   <div class="bet-list">${rows}</div>
   ${topMercRows.length ? '<div class=\"section-title\">📈 Mercados Mais Lucrativos</div><div>'+topMercRows+'</div>' : ''}
   ${flopMercRows.length ? '<div class=\"section-title\">📉 Mercados a Evitar</div><div>'+flopMercRows+'</div>' : ''}
-  <div class="footer">Bet Control — Controle de Apostas Esportivas</div>
+  <div class="footer">Bet Control - Controle de Apostas Esportivas</div>
 </body>
 </html>`;
 
@@ -6373,7 +6378,7 @@ function printPdfReport() {
   }).join('\n');
 
   const texto =
-`📊 BET CONTROL — ${hoje}
+`📊 BET CONTROL - ${hoje}
 ━━━━━━━━━━━━━━━━━━━━
 🎯 Total: ${data.length} apostas
 ✅ Wins: ${wins.length}  ❌ Losses: ${losses.length}  ↩ Ref: ${refunded.length}${inplay.length>0?' ⏳ Play: '+inplay.length:''}
@@ -6385,7 +6390,7 @@ ${lucroTotal>=0?'📈':'📉'} Lucro: ${lucroTotal>=0?'+':''}R$ ${lucroTotal.toF
 ${linhas}`;
 
   if (navigator.share) {
-    navigator.share({ title: 'BetControl — Relatório', text: texto }).catch(() => fallbackCopy(texto));
+    navigator.share({ title: 'BetControl - Relatório', text: texto }).catch(() => fallbackCopy(texto));
   } else {
     fallbackCopy(texto);
   }
@@ -6473,7 +6478,7 @@ function selectJogo(val) {
 }
 
 
-// ── CONTROLE DE DIA DE ANÁLISE ────────────────────────────────────
+// -- CONTROLE DE DIA DE ANÁLISE ------------------------------------
 function isDiaAnalise() {
   const hoje = new Date();
   const dia = hoje.getDay(); // 1=segunda, 4=quinta
@@ -6539,7 +6544,7 @@ window.addEventListener('DOMContentLoaded', function() {
   checkSenhaAoAbrir();
 });
 
-// ── CONFIGURAÇÕES ─────────────────────────────────────────────────
+// -- CONFIGURAÇÕES -------------------------------------------------
 
 function setTema(tema) {
   localStorage.setItem('cfg_tema', tema);
@@ -6574,7 +6579,7 @@ function loadTema() {
 
 
 
-// ── APOSTADOR & SENHA ─────────────────────────────────────────────
+// -- APOSTADOR & SENHA ---------------------------------------------
 function saveNome() {
   const nome = document.getElementById('cfgNome').value.trim();
   localStorage.setItem('cfg_nome', nome);
@@ -6691,7 +6696,7 @@ function toggleMenuConfig() {
     return;
   }
   // Update displayed values
-  const nome = localStorage.getItem('cfg_nome') || '—';
+  const nome = localStorage.getItem('cfg_nome') || '-';
   const min = localStorage.getItem('cfg_odd_min');
   const med = localStorage.getItem('cfg_odd_med');
   const tema = localStorage.getItem('cfg_tema') || 'escuro';
@@ -6700,8 +6705,8 @@ function toggleMenuConfig() {
   const oEl = document.getElementById('menuOddsVal');
   const tEl = document.getElementById('menuTemaVal');
   const sEl = document.getElementById('menuSenhaVal');
-  if (nEl) nEl.textContent = nome !== '—' ? nome : '—';
-  if (oEl) oEl.textContent = (min && med) ? 'Mín '+min+' / Méd '+med : (min ? 'Mín '+min : (med ? 'Méd '+med : '—'));
+  if (nEl) nEl.textContent = nome !== '-' ? nome : '-';
+  if (oEl) oEl.textContent = (min && med) ? 'Mín '+min+' / Méd '+med : (min ? 'Mín '+min : (med ? 'Méd '+med : '-'));
   if (tEl) tEl.textContent = tema.charAt(0).toUpperCase()+tema.slice(1);
   if (sEl) sEl.textContent = senhaAtiva ? 'Ativada' : 'Desativada';
   // Position
@@ -6754,7 +6759,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// ── AUTOCONTROLE ──────────────────────────────────────────────────
+// -- AUTOCONTROLE --------------------------------------------------
 function saveAutocontrole() {
   const cfg = {
     maxPerdas:   parseInt(document.getElementById('acMaxPerdas')?.value)   || null,
@@ -6865,9 +6870,85 @@ function acModalFechar() {
   showToast('Boa decisão! Proteja sua banca. 🛡️');
 }
 
-// ── ADMIN CONTROLS ────────────────────────────────────────────────
-function checkAdminControls() {
-  const cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
+// -- ADMIN CONTROLS ------------------------------------------------
+async function checkAdminControls() {
+  try {
+    const r = await fetch(
+      `${BC_API.replace('/functions/v1/bc-api', '')}/rest/v1/bc_admin_config?id=eq.global&select=*`,
+      { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eHJmbGpka2lrcXpjeG10YmlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTczMDMsImV4cCI6MjA5Nzk5MzMwM30.AYnsHBi5NTOr_hLo9NY4ZNP3fseYKwVprkPt7HzAoc8', 'Content-Type': 'application/json' } }
+    );
+    const d = await r.json();
+    const cfg = d && d[0] ? d[0] : {};
+
+    // 1. Manutenção
+    if (cfg.manutencao) {
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          background:#080c14;color:#e8edf5;font-family:'DM Sans',sans-serif;padding:32px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">🔧</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#00e676;margin-bottom:8px;">BETCONTROL</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:10px;">Em Manutenção</div>
+          <div style="font-size:13px;color:#546e7a;max-width:280px;line-height:1.6;">${cfg.msg_manutencao || 'Voltamos em breve!'}</div>
+        </div>`;
+      return;
+    }
+
+    // 2. Aviso global
+    if (cfg.aviso_global && cfg.aviso_texto && !document.getElementById('adminBanner')) {
+      const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
+      const cor = cores[cfg.aviso_tipo] || '#00e676';
+      const banner = document.createElement('div');
+      banner.id = 'adminBanner';
+      banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
+        color:#000;text-align:center;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;`;
+      banner.textContent = (cfg.aviso_titulo ? cfg.aviso_titulo + ': ' : '') + cfg.aviso_texto;
+      banner.onclick = () => banner.remove();
+      document.body.prepend(banner);
+    } else if (!cfg.aviso_global) {
+      const b = document.getElementById('adminBanner');
+      if (b) b.remove();
+    }
+  } catch(e) { /* offline */ }
+}
+
+async function checkMensagensAdmin() {
+  try {
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eHJmbGpka2lrcXpjeG10YmlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTczMDMsImV4cCI6MjA5Nzk5MzMwM30.AYnsHBi5NTOr_hLo9NY4ZNP3fseYKwVprkPt7HzAoc8';
+    const SUPA = 'https://auxrfljdkikqzcxmtbii.supabase.co';
+    const r = await fetch(`${SUPA}/rest/v1/bc_mensagens?ativo=eq.true&order=criado_em.desc&select=*`,
+      { headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' } }
+    );
+    const msgs = await r.json();
+    if (!Array.isArray(msgs)) return;
+
+    // Salva localmente para exibir no modal
+    localStorage.setItem('admin_mensagens', JSON.stringify(
+      msgs.map(m => ({ id: m.id, titulo: m.titulo, texto: m.texto, tipo: m.tipo, ts: new Date(m.criado_em).toLocaleString('pt-BR') }))
+    ));
+
+    const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
+    const naoLidas = msgs.filter(m => !lidas.includes(m.id));
+    const dot   = document.getElementById('menuMsgDot');
+    const count = document.getElementById('menuMsgCount');
+    if (dot)   dot.style.display  = naoLidas.length > 0 ? 'block' : 'none';
+    if (count) count.textContent  = naoLidas.length > 0 ? naoLidas.length + ' nova(s)' : 'Nenhuma';
+  } catch(e) { /* offline */ }
+}
+
+async function checkAdminControls() {
+  let cfg = {};
+  try {
+    const r = await fetch(`${BC_API}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getAdminConfig' })
+    });
+    const d = await r.json();
+    if (d.ok && d.config) cfg = d.config;
+    else cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  } catch(e) {
+    cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  }
 
   // 1. Modo manutenção
   if (cfg.manutencao) {
@@ -7027,34 +7108,7 @@ function checkMensagensNovas() {
   atualizarBadgeMensagens(naoLidas);
 }
 
-// ── MENSAGENS DO ADMIN ────────────────────────────────────────────
-function checkMensagensAdmin() {
-  const cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
-  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
-  const naoLidas = msgs.filter(m => !lidas.includes(m.ts));
-  const dot  = document.getElementById('menuMsgDot');
-  const count = document.getElementById('menuMsgCount');
-  if (dot)   dot.style.display   = naoLidas.length > 0 ? 'block' : 'none';
-  if (count) count.textContent   = naoLidas.length > 0 ? naoLidas.length + ' nova(s)' : 'Nenhuma';
-  // Mostra banner se tiver aviso global ativo
-  if (cfg.avisoGlobal && cfg.avisoTexto) {
-    const bannerExistente = document.getElementById('adminBanner');
-    if (!bannerExistente) {
-      const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
-      const cor = cores[cfg.avisoTipo] || '#00e676';
-      const banner = document.createElement('div');
-      banner.id = 'adminBanner';
-      banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
-        color:#000;text-align:center;font-size:11px;font-weight:700;padding:6px 12px;
-        letter-spacing:0.5px;cursor:pointer;`;
-      banner.textContent = (cfg.avisoTitulo ? cfg.avisoTitulo + ': ' : '') + cfg.avisoTexto;
-      banner.onclick = () => banner.remove();
-      document.body.prepend(banner);
-    }
-  }
-}
-
+// -- MENSAGENS DO ADMIN --------------------------------------------
 function abrirMensagensAdmin() {
   document.getElementById('menuConfigDrop').style.display = 'none';
   const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
@@ -7147,7 +7201,7 @@ function updateMetaRoi(roi, lucroTotal, totalEntrada, nApostas) {
   // Atualiza ROI atual
   const roiEl = document.getElementById('metaRoiAtual');
   if (nApostas === 0) {
-    roiEl.textContent = '—';
+    roiEl.textContent = '-';
     roiEl.style.color = 'var(--muted)';
     document.getElementById('metaRoiBar').style.width = '0%';
     document.getElementById('metaRoiMsg').textContent = 'Registre apostas para calcular';
