@@ -1911,9 +1911,15 @@
   </div>
 
   <!-- EXPORT SECTION — estilo Minha Atividade -->
-  <div style="margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid var(--border);">
+  <div style="margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid var(--border);position:relative;" id="exportSection">
 
-    <!-- Period tabs -->
+    <!-- Overlay de cadeado para Trial -->
+    <div id="exportLockOverlay" style="display:none;position:absolute;inset:0;z-index:10;background:rgba(8,12,20,0.85);border-radius:14px;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
+      <div style="font-size:30px;margin-bottom:10px;">🔒</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Funcionalidade Premium</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Disponível nos planos<br><strong style="color:var(--verde);">Mensal</strong> e <strong style="color:var(--verde);">Anual</strong>.</div>
+      <div style="font-size:11px;color:var(--muted2);margin-top:8px;">Plano atual: <span id="exportLockPlano" style="color:var(--amarelo);font-weight:600;">Trial</span></div>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);" id="exportFilterBtns">
       <button onclick="setExportFilter('todos',this)" style="padding:11px 4px;border:none;background:var(--verde);color:#000;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;transition:all 0.2s;">Todos</button>
       <button onclick="setExportFilter('hoje',this)" style="padding:11px 4px;border:none;background:var(--surface);color:var(--muted);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;border-left:1px solid var(--border);transition:all 0.2s;">Hoje</button>
@@ -6145,15 +6151,24 @@ function exportBloqueado(tipo) {
 function initExportButtons() {
   const plano = bcUser ? bcUser.plano : 'free';
   const bloqueado = plano === 'trial';
-  const lock = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+
+  // Overlay na seção inteira
+  const overlay = document.getElementById('exportLockOverlay');
+  const planoEl = document.getElementById('exportLockPlano');
+  if (overlay) {
+    overlay.style.display = bloqueado ? 'flex' : 'none';
+    if (planoEl) planoEl.textContent = plano.charAt(0).toUpperCase() + plano.slice(1);
+  }
+
+  // Botões individuais de export
+  const lockSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   if (bloqueado) {
     const csv = document.getElementById('btnExportCSV');
     const ap  = document.getElementById('btnExportApostas');
     const mer = document.getElementById('btnExportMercados');
-    if (csv) csv.innerHTML  = lock + ' CSV';
-    if (ap)  ap.innerHTML   = lock + ' Apostas';
-    if (mer) mer.innerHTML  = lock + ' Mercados';
-    [csv, ap, mer].forEach(b => { if (b) { b.style.opacity = '0.5'; b.style.color = 'var(--muted)'; } });
+    if (csv) { csv.innerHTML  = lockSvg + ' CSV';      csv.style.opacity = '0.5'; csv.style.color = 'var(--muted)'; }
+    if (ap)  { ap.innerHTML   = lockSvg + ' Apostas';  ap.style.opacity  = '0.5'; ap.style.color  = 'var(--muted)'; }
+    if (mer) { mer.innerHTML  = lockSvg + ' Mercados'; mer.style.opacity = '0.5'; mer.style.color = 'var(--muted)'; }
   }
 }
 
