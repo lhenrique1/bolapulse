@@ -1321,6 +1321,18 @@
             <span id="menuUserPlano" style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(0,230,118,0.15);color:var(--verde);">FREE</span>
           </div>
         </div>
+        <!-- Botão Assinar/Upgrade -->
+        <div onclick="abrirPlanos()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);background:rgba(255,215,64,0.05);transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,215,64,0.1)'" onmouseleave="this.style.background='rgba(255,215,64,0.05)'">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:10px;color:var(--amarelo);font-weight:700;letter-spacing:0.5px;margin-bottom:1px;">ASSINAR / UPGRADE</div>
+              <span style="font-size:12px;color:var(--text);">Ver planos a partir de R$19,90</span>
+            </div>
+            <span style="font-size:16px;">⭐</span>
+          </div>
+        </div>
+          </div>
+        </div>
         <div style="padding:8px 16px 5px;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid var(--border);">Configuração</div>
         <div onclick="abrirModalCfg('nome')" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Nome do apostador</div>
@@ -1347,6 +1359,13 @@
           <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Senha de acesso</div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span id="menuSenhaVal" style="font-size:13px;color:var(--text);font-weight:500;">Desativada</span>
+            <span style="color:var(--muted);font-size:13px;">›</span>
+          </div>
+        </div>
+        <div onclick="abrirDiasAnalise()" style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Dias de análise</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span id="menuDiasAnaliseVal" style="font-size:13px;color:var(--text);font-weight:500;">Nenhum</span>
             <span style="color:var(--muted);font-size:13px;">›</span>
           </div>
         </div>
@@ -2671,6 +2690,7 @@ function iniciarApp() {
   carregarDadosApp();
   setTimeout(initExportButtons, 600);
   setTimeout(checkMensagensAdmin, 800);
+  setTimeout(verificarRetornoPagamento, 1000);
 }
 
 // --- INIT -------------------------------------------------------------
@@ -6494,16 +6514,25 @@ function selectJogo(val) {
 
 
 // -- CONTROLE DE DIA DE ANÁLISE ------------------------------------
+function getDiasAnalise() {
+  const saved = localStorage.getItem('cfg_dias_analise');
+  return saved ? JSON.parse(saved) : [];
+}
+
+function saveDiasAnalise(dias) {
+  localStorage.setItem('cfg_dias_analise', JSON.stringify(dias));
+}
+
 function isDiaAnalise() {
-  const hoje = new Date();
-  const dia = hoje.getDay(); // 1=segunda, 4=quinta
-  const hora = hoje.getHours();
-  return (dia === 1 || dia === 4) && hora >= 8;
+  const dias = getDiasAnalise();
+  if (!dias.length) return false;
+  const hoje = new Date().getDay();
+  return dias.includes(hoje);
 }
 
 function getNomeDia() {
-  const dia = new Date().getDay();
-  return dia === 1 ? 'Segunda-feira' : 'Quinta-feira';
+  const nomes = ['Domingo','Segunda','Terca','Quarta','Quinta','Sexta','Sabado'];
+  return nomes[new Date().getDay()] || '';
 }
 
 function getChaveAnalise() {
@@ -6512,37 +6541,13 @@ function getChaveAnalise() {
 }
 
 function verificarDiaAnalise() {
-  if (!isDiaAnalise()) return;
-  const chave = getChaveAnalise();
-  const status = localStorage.getItem(chave);
-  if (status === 'ok') return; // já confirmou hoje
-  if (status === 'bloqueado') {
-    mostrarBloqueio();
-    return;
-  }
-  mostrarAnalise();
+  // Removido — agora é manual pelo usuário
 }
 
-function mostrarAnalise() {
-  document.getElementById('analiseNomeDia').textContent = getNomeDia();
-  document.getElementById('analiseModal').style.display = 'flex';
-  document.getElementById('bloqueioModal').style.display = 'none';
-}
-
-function confirmarAnalise() {
-  localStorage.setItem(getChaveAnalise(), 'ok');
-  document.getElementById('analiseModal').style.display = 'none';
-}
-
-function negarAnalise() {
-  localStorage.setItem(getChaveAnalise(), 'bloqueado');
-  document.getElementById('analiseModal').style.display = 'none';
-  mostrarBloqueio();
-}
-
-function mostrarBloqueio() {
-  document.getElementById('bloqueioModal').style.display = 'flex';
-}
+function mostrarAnalise() {}
+function confirmarAnalise() { document.getElementById('analiseModal').style.display = 'none'; }
+function negarAnalise() { document.getElementById('analiseModal').style.display = 'none'; }
+function reabrirAnalise() { document.getElementById('bloqueioModal').style.display = 'none'; }
 
 function reabrirAnalise() {
   document.getElementById('bloqueioModal').style.display = 'none';
@@ -6551,7 +6556,6 @@ function reabrirAnalise() {
 
 // Verifica ao carregar
 window.addEventListener('DOMContentLoaded', function() {
-  setTimeout(verificarDiaAnalise, 800);
   loadConfig();
   loadTema();
   loadNome();
@@ -7164,6 +7168,157 @@ function marcarTodasLidas() {
   showToast('Todas marcadas como lidas');
 }
 
+// ── DIAS DE ANALISE ──────────────────────────────────────────────
+const NOMES_DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sab'];
+
+function abrirDiasAnalise() {
+  document.getElementById('menuConfigDrop').style.display = 'none';
+  const selecionados = getDiasAnalise();
+  const grid = document.getElementById('diasGrid');
+  grid.innerHTML = NOMES_DIAS.map((nome, i) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid ${selecionados.includes(i) ? 'var(--verde)' : 'var(--border)'};background:${selecionados.includes(i) ? 'rgba(0,230,118,0.08)' : 'transparent'};cursor:pointer;transition:all 0.15s;" id="diaLabel${i}" onclick="toggleDia(${i})">
+      <div id="diaCheck${i}" style="width:16px;height:16px;border-radius:4px;border:2px solid ${selecionados.includes(i) ? 'var(--verde)' : 'var(--border)'};background:${selecionados.includes(i) ? 'var(--verde)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${selecionados.includes(i) ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+      </div>
+      <span style="font-size:13px;font-weight:600;color:${selecionados.includes(i) ? 'var(--verde)' : 'var(--text)'};">${nome}</span>
+    </label>`).join('');
+  document.getElementById('diasAnaliseModal').style.display = 'flex';
+}
+
+let _diasTemp = [];
+
+function toggleDia(i) {
+  const saved = getDiasAnalise();
+  if (!_diasTemp.length && saved.length) _diasTemp = [...saved];
+  if (_diasTemp.includes(i)) _diasTemp = _diasTemp.filter(d => d !== i);
+  else _diasTemp.push(i);
+  // Atualiza visual
+  const label = document.getElementById('diaLabel' + i);
+  const check = document.getElementById('diaCheck' + i);
+  const sel = _diasTemp.includes(i);
+  if (label) { label.style.borderColor = sel ? 'var(--verde)' : 'var(--border)'; label.style.background = sel ? 'rgba(0,230,118,0.08)' : 'transparent'; label.querySelector('span').style.color = sel ? 'var(--verde)' : 'var(--text)'; }
+  if (check) { check.style.borderColor = sel ? 'var(--verde)' : 'var(--border)'; check.style.background = sel ? 'var(--verde)' : 'transparent'; check.innerHTML = sel ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''; }
+}
+
+function salvarDiasAnalise() {
+  const dias = _diasTemp.length ? _diasTemp : getDiasAnalise();
+  saveDiasAnalise(dias);
+  _diasTemp = [];
+  atualizarMenuDiasAnalise();
+  fecharDiasAnalise();
+  showToast('Dias de analise salvos!');
+}
+
+function fecharDiasAnalise() {
+  _diasTemp = [];
+  document.getElementById('diasAnaliseModal').style.display = 'none';
+}
+
+function atualizarMenuDiasAnalise() {
+  const dias = getDiasAnalise();
+  const el = document.getElementById('menuDiasAnaliseVal');
+  if (!el) return;
+  if (!dias.length) { el.textContent = 'Nenhum'; return; }
+  el.textContent = dias.map(d => NOMES_DIAS[d]).join(', ');
+}
+
+// -- PAGAMENTO / PLANOS ──────────────────────────────────────────
+const BC_PAYMENT = 'https://auxrfljdkikqzcxmtbii.supabase.co/functions/v1/bc-payment';
+
+function abrirPlanos() {
+  document.getElementById('menuConfigDrop').style.display = 'none';
+  const modal = document.getElementById('planosModal');
+  modal.style.display = 'flex';
+  // Mostra plano atual
+  if (bcUser) {
+    document.getElementById('planoAtualNome').textContent = getPlanoLabel(bcUser.plano);
+    if (bcUser.expira_em) {
+      const exp = new Date(bcUser.expira_em).toLocaleDateString('pt-BR');
+      document.getElementById('planoExpiraData').textContent = exp;
+      document.getElementById('planoExpiraInfo').style.display = 'inline';
+    }
+    // Desabilita botão do plano atual
+    if (bcUser.plano === 'mensal') {
+      const btn = document.getElementById('btnAssinarMensal');
+      btn.textContent = 'Plano atual';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+    if (bcUser.plano === 'anual') {
+      const btn = document.getElementById('btnAssinarAnual');
+      btn.textContent = 'Plano atual';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+  }
+}
+
+function fecharPlanosModal() {
+  document.getElementById('planosModal').style.display = 'none';
+}
+
+async function assinar(plano) {
+  const btnId = plano === 'mensal' ? 'btnAssinarMensal' : 'btnAssinarAnual';
+  const btn = document.getElementById(btnId);
+  const statusEl = document.getElementById('pagamentoStatus');
+  btn.textContent = 'Aguarde...';
+  btn.disabled = true;
+  statusEl.style.display = 'none';
+  try {
+    const res = await fetch(BC_PAYMENT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-bc-token': getToken() },
+      body: JSON.stringify({ action: 'criarPagamento', plano })
+    });
+    const d = await res.json();
+    if (d.ok && d.checkout_url) {
+      // Redireciona para o Mercado Pago
+      window.location.href = d.checkout_url;
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(255,23,68,0.1)';
+      statusEl.style.color = '#ff5252';
+      statusEl.textContent = 'Erro ao iniciar pagamento. Tente novamente.';
+      btn.textContent = plano === 'mensal' ? 'Assinar por R$19,90/mês' : 'Assinar por R$149,90/ano';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    statusEl.style.display = 'block';
+    statusEl.style.background = 'rgba(255,23,68,0.1)';
+    statusEl.style.color = '#ff5252';
+    statusEl.textContent = 'Sem conexão. Verifique a internet.';
+    btn.textContent = plano === 'mensal' ? 'Assinar por R$19,90/mês' : 'Assinar por R$149,90/ano';
+    btn.disabled = false;
+  }
+}
+
+// Verifica retorno do Mercado Pago
+async function verificarRetornoPagamento() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('pagamento');
+  if (!status) return;
+  // Limpa URL
+  window.history.replaceState({}, '', window.location.pathname);
+  if (status === 'sucesso') {
+    showToast('Pagamento aprovado! Atualizando plano...');
+    // Revalida plano no servidor
+    setTimeout(async () => {
+      const res = await bcApi({ action: 'validar' });
+      if (res.ok && res.user) {
+        bcUser = res.user;
+        localStorage.setItem('bc_user_data', JSON.stringify(bcUser));
+        showToast('Plano ' + getPlanoLabel(bcUser.plano) + ' ativado!');
+        checkAutocontrolePlano();
+        initExportButtons();
+      }
+    }, 2000);
+  } else if (status === 'falhou') {
+    showToast('Pagamento nao aprovado. Tente novamente.');
+  } else if (status === 'pendente') {
+    showToast('Pagamento pendente. Aguardando confirmacao.');
+  }
+}
+
 let _metaRoiAlvo = 6;
 
 function toggleMetaTabela() {
@@ -7306,24 +7461,260 @@ function updateMetaRoi(roi, lucroTotal, totalEntrada, nApostas) {
 </script>
 
 
-<!-- Modal Dia de Análise -->
-<div id="analiseModal" style="display:none;position:fixed;inset:0;z-index:99997;background:#000d;align-items:center;justify-content:center;">
-  <div style="background:#0f1923;border:1px solid #1e2d42;border-radius:16px;padding:28px 22px;width:82%;max-width:320px;text-align:center;box-shadow:0 8px 40px #000c;">
-    <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;">Dia de Análise</div>
-    <div style="font-size:12px;color:#90a4ae;margin-bottom:6px;line-height:1.6;">
-      Hoje é <span id="analiseNomeDia" style="color:#00e676;font-weight:700;"></span> — dia de <strong style="color:#ffd600;">analisar</strong> antes de apostar.
+<!-- Modal Dias de Análise -->
+<div id="diasAnaliseModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:340px;overflow:hidden;">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Dias de Análise</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Escolha os dias que você analisa jogos</div>
+      </div>
+      <button onclick="fecharDiasAnalise()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">×</button>
     </div>
-    <div style="font-size:11px;color:#607d8b;margin-bottom:22px;line-height:1.6;">
-      Só avance se encontrar jogos com boa qualidade de entrada.
+    <div style="padding:16px 20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="diasGrid">
+        <!-- Preenchido por JS -->
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center;">Nesses dias aparecerá um lembrete para analisar antes de apostar</div>
     </div>
-    <button onclick="confirmarAnalise()" style="width:100%;padding:13px;border-radius:10px;border:none;background:#00e676;color:#0a0f14;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">Sim, encontrei jogos bons</button>
-    <button onclick="negarAnalise()" style="width:100%;padding:11px;border-radius:10px;border:1px solid #1e2d42;background:transparent;color:#607d8b;font-size:12px;font-weight:500;cursor:pointer;margin-top:8px;">
-      Não há jogos bons hoje
-    </button>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button onclick="fecharDiasAnalise()" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button>
+      <button onclick="salvarDiasAnalise()" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--verde);color:#000;font-size:13px;font-weight:700;cursor:pointer;">Salvar</button>
+    </div>
   </div>
 </div>
 
-<!-- Tela de bloqueio -->
+<!-- Modal Upgrade Premium -->
+<div id="upgradeModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:360px;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a2332,#0e1420);padding:24px 20px 20px;text-align:center;border-bottom:1px solid var(--border);">
+      <div style="font-size:32px;margin-bottom:8px;">⚡</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#ffd740;">UPGRADE PREMIUM</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Desbloqueie todas as funcionalidades</div>
+    </div>
+
+    <!-- Benefícios -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;">O QUE VOCE GANHA</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--verde);font-weight:700;">✓</span> Autocontrole completo</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--verde);font-weight:700;">✓</span> Exportar CSV, Apostas e Mercados</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--verde);font-weight:700;">✓</span> Relatórios completos</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--verde);font-weight:700;">✓</span> Stats avançado e histórico</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--verde);font-weight:700;">✓</span> Suporte prioritário</div>
+      </div>
+    </div>
+
+    <!-- Planos -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+      <!-- Mensal -->
+      <div onclick="selecionarPlanoUpgrade('mensal')" id="upgradeMensal"
+        style="border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Mensal</div>
+            <div style="font-size:11px;color:var(--muted);">Renova todo mês</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);">R$ 19,90</div>
+            <div style="font-size:10px;color:var(--muted);">por mês</div>
+          </div>
+        </div>
+      </div>
+      <!-- Anual -->
+      <div onclick="selecionarPlanoUpgrade('anual')" id="upgradeAnual"
+        style="border:2px solid var(--verde);border-radius:12px;padding:14px;cursor:pointer;background:rgba(0,230,118,0.04);position:relative;transition:all 0.2s;">
+        <div style="position:absolute;top:-10px;right:12px;background:var(--verde);color:#000;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:1px;">MAIS POPULAR</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--verde);">Anual</div>
+            <div style="font-size:11px;color:var(--verde);opacity:0.7;">37% de desconto</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--verde);">R$ 149,90</div>
+            <div style="font-size:10px;color:var(--muted);">R$ 12,49/mês</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div style="padding:16px 20px;">
+      <button onclick="processarPagamento()" id="btnPagar"
+        style="width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#ffd740,#ff9800);color:#000;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.5px;margin-bottom:10px;">
+        💳 PAGAR COM MERCADO PAGO
+      </button>
+      <button onclick="fecharUpgrade()"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">
+        Agora não
+      </button>
+      <div style="text-align:center;margin-top:10px;font-size:10px;color:var(--muted2);">
+        Pagamento seguro via Mercado Pago • Pix, cartão e boleto
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Planos / Pagamento -->
+<div id="planosModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);align-items:flex-end;justify-content:center;padding:0;">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px 20px 40px;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);">Assinar BetControl</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Desbloqueie todas as funcionalidades</div>
+      </div>
+      <button onclick="fecharPlanosModal()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+
+    <!-- Plano atual -->
+    <div id="planoAtualInfo" style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:10px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:12px;color:var(--muted);">Plano atual</div>
+      <div id="planoAtualBadge" style="font-size:12px;font-weight:700;color:var(--verde);">TRIAL</div>
+    </div>
+
+    <!-- Card Mensal -->
+    <div style="border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s;" onclick="assinar('mensal')" onmouseenter="this.style.borderColor='var(--azul)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">💎 Mensal</div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:800;color:var(--azul);font-family:'DM Mono',monospace;">R$ 19,90</div>
+          <div style="font-size:10px;color:var(--muted);">por mês</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);">✓ Autocontrole completo</div>
+        <div style="font-size:12px;color:var(--muted);">✓ Export CSV e Relatórios</div>
+        <div style="font-size:12px;color:var(--muted);">✓ Stats avançado</div>
+        <div style="font-size:12px;color:var(--muted);">✓ Sugestões de mercado</div>
+      </div>
+      <button onclick="assinar('mensal')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--azul);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Assinar Mensal — R$ 19,90
+      </button>
+    </div>
+
+    <!-- Card Anual — destaque -->
+    <div style="border:2px solid var(--verde);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;position:relative;background:rgba(0,230,118,0.03);" onclick="assinar('anual')">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--verde);color:#000;font-size:10px;font-weight:800;padding:3px 12px;border-radius:20px;white-space:nowrap;">MELHOR VALOR — ECONOMIZE 37%</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:6px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">🏆 Anual</div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:800;color:var(--verde);font-family:'DM Mono',monospace;">R$ 149,90</div>
+          <div style="font-size:10px;color:var(--muted);">equivale a R$ 12,49/mês</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);">✓ Tudo do Mensal</div>
+        <div style="font-size:12px;color:var(--muted);">✓ Prioridade no suporte</div>
+        <div style="font-size:12px;color:var(--muted);">✓ Acesso antecipado a novidades</div>
+        <div style="font-size:12px;color:var(--verde);">✓ Badge exclusivo de assinante</div>
+      </div>
+      <button onclick="assinar('anual')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--verde);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Assinar Anual — R$ 149,90
+      </button>
+    </div>
+
+    <!-- Pix info -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#546e7a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span style="font-size:11px;color:var(--muted);">Pagamento seguro via Mercado Pago • Pix, Cartão ou Boleto</span>
+    </div>
+
+    <!-- Loading state -->
+    <div id="pagamentoLoading" style="display:none;text-align:center;padding:20px;">
+      <div style="font-size:14px;color:var(--muted);">Aguarde, redirecionando...</div>
+    </div>
+  </div>
+</div>
+<!-- Modal Planos / Pagamento -->
+<div id="planosModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.92);align-items:flex-end;justify-content:center;padding-bottom:0;">
+  <div style="background:#0e1420;border-radius:20px 20px 0 0;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;padding:24px 20px 40px;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#00e676;">BETCONTROL PRO</div>
+        <div style="font-size:12px;color:#546e7a;">Escolha seu plano</div>
+      </div>
+      <button onclick="fecharPlanosModal()" style="background:rgba(255,255,255,0.06);border:none;color:#90a4ae;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+
+    <!-- Plano atual -->
+    <div id="planoAtualInfo" style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#90a4ae;text-align:center;">
+      Seu plano atual: <strong id="planoAtualNome" style="color:#00e676;">Free</strong>
+      <span id="planoExpiraInfo" style="display:none;"> — expira em <span id="planoExpiraData" style="color:#ffd740;"></span></span>
+    </div>
+
+    <!-- Card Trial -->
+    <div style="border:1px solid #1e2d42;border-radius:14px;padding:16px;margin-bottom:12px;opacity:0.6;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:15px;font-weight:700;color:#e8edf5;">Trial</div>
+        <div style="font-size:18px;font-weight:800;color:#90a4ae;">GRÁTIS</div>
+      </div>
+      <div style="font-size:11px;color:#546e7a;margin-bottom:10px;">7 dias • Sem cartão de crédito</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:11px;color:#546e7a;">✓ Lançar apostas</div>
+        <div style="font-size:11px;color:#546e7a;">✓ Relatório básico</div>
+        <div style="font-size:11px;color:#37474f;">✕ Autocontrole</div>
+        <div style="font-size:11px;color:#37474f;">✕ Exportar dados</div>
+      </div>
+    </div>
+
+    <!-- Card Mensal -->
+    <div style="border:1px solid rgba(0,230,118,0.3);border-radius:14px;padding:16px;margin-bottom:12px;background:rgba(0,230,118,0.04);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:15px;font-weight:700;color:#e8edf5;">Mensal</div>
+        <div>
+          <span style="font-size:22px;font-weight:800;color:#00e676;">R$19,90</span>
+          <span style="font-size:11px;color:#546e7a;">/mês</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#546e7a;margin-bottom:12px;">Renovação automática mensal</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+        <div style="font-size:11px;color:#90a4ae;">✓ Tudo do Trial</div>
+        <div style="font-size:11px;color:#00e676;">✓ Autocontrole premium</div>
+        <div style="font-size:11px;color:#00e676;">✓ Exportar CSV e relatórios</div>
+        <div style="font-size:11px;color:#00e676;">✓ Stats completo</div>
+      </div>
+      <button onclick="assinar('mensal')" id="btnAssinarMensal"
+        style="width:100%;padding:12px;border-radius:10px;border:none;background:#00e676;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Assinar por R$19,90/mês
+      </button>
+    </div>
+
+    <!-- Card Anual -->
+    <div style="border:1px solid rgba(255,215,64,0.3);border-radius:14px;padding:16px;margin-bottom:12px;background:rgba(255,215,64,0.04);position:relative;">
+      <div style="position:absolute;top:-10px;right:14px;background:#ffd740;color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;">MELHOR VALOR</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:15px;font-weight:700;color:#e8edf5;">Anual</div>
+        <div>
+          <span style="font-size:22px;font-weight:800;color:#ffd740;">R$149,90</span>
+          <span style="font-size:11px;color:#546e7a;">/ano</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#ffd740;margin-bottom:12px;">Economize 37% vs mensal • R$12,49/mês</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+        <div style="font-size:11px;color:#90a4ae;">✓ Tudo do Mensal</div>
+        <div style="font-size:11px;color:#ffd740;">✓ Prioridade no suporte</div>
+        <div style="font-size:11px;color:#ffd740;">✓ Acesso antecipado a novidades</div>
+        <div style="font-size:11px;color:#ffd740;">✓ Badge exclusivo</div>
+      </div>
+      <button onclick="assinar('anual')" id="btnAssinarAnual"
+        style="width:100%;padding:12px;border-radius:10px;border:none;background:#ffd740;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Assinar por R$149,90/ano
+      </button>
+    </div>
+
+    <div style="font-size:10px;color:#37474f;text-align:center;margin-top:8px;">
+      Pagamento seguro via Mercado Pago • Pix, cartão e boleto
+    </div>
+    <div id="pagamentoStatus" style="display:none;margin-top:12px;padding:12px;border-radius:8px;font-size:12px;text-align:center;"></div>
+  </div>
+</div>
+
 <div id="bloqueioModal" style="display:none;position:fixed;inset:0;z-index:99996;background:#000e;align-items:center;justify-content:center;flex-direction:column;">
   <div style="text-align:center;padding:32px 24px;">
     <div style="font-size:48px;margin-bottom:16px;">🚫</div>
