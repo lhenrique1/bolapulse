@@ -101,6 +101,7 @@
     padding: 6px 10px;
     gap: 8px;
     min-height: 48px;
+    min-width: 0;
   }
   /* Push content below fixed header — measured: logo 52px + metrics 52px + tabs 40px = 144px */
   body { padding-top: 144px; }
@@ -111,13 +112,18 @@
     position: relative;
     flex-shrink: 1;
     min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
     border-radius: 8px;
   }
   header h1 {
     font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
-    font-size: 19px;
+    font-size: clamp(13px, 4.4vw, 19px);
     letter-spacing: 1.5px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
     position: relative;
     z-index: 1;
     padding: 1px 4px;
