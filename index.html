@@ -1207,22 +1207,6 @@
               <div id="req5" style="font-size:11px;color:#546e7a;display:flex;align-items:center;gap:5px;"><span id="req5icon" style="font-size:12px;">✕</span> Caractere especial</div>
             </div>
           </div>
-
-          <!-- Sugestão de senha -->
-          <div id="cadSenhaSugestao" style="display:none;margin-top:6px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:8px;padding:8px 12px;">
-            <div style="font-size:10px;color:#546e7a;margin-bottom:4px;">SENHA SUGERIDA</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <span id="cadSenhaGerada" style="font-family:'DM Mono',monospace;font-size:13px;color:#00e676;letter-spacing:1px;word-break:break-all;"></span>
-              <button type="button" onclick="usarSenhaSugerida()"
-                style="flex-shrink:0;padding:4px 10px;border-radius:6px;border:1px solid rgba(0,230,118,0.4);background:rgba(0,230,118,0.1);color:#00e676;font-size:11px;font-weight:700;cursor:pointer;">
-                Usar esta
-              </button>
-            </div>
-          </div>
-          <button type="button" onclick="gerarSenhaSugestao()"
-            style="margin-top:6px;width:100%;padding:7px;border-radius:7px;border:1px dashed rgba(0,230,118,0.3);background:transparent;color:#546e7a;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">
-            ✨ Sugerir senha segura
-          </button>
         </div>
 
         <!-- CONFIRMAR SENHA -->
@@ -2738,9 +2722,6 @@ async function carregarDadosApp() {
   }
   if (currentUserId) localStorage.setItem('bc_last_user_id', currentUserId);
 
-  // Show loading indicator
-  document.body.insertAdjacentHTML('beforeend', '<div id="syncLoader" style="position:fixed;top:0;left:0;right:0;z-index:999999;background:#00e676;color:#000;text-align:center;font-size:11px;font-weight:700;padding:4px;letter-spacing:1px;">SINCRONIZANDO...</div>');
-
   try {
     const [betsData, bancaData, obsData, sitesData, cfgNome, cfgSenha, cfgSenhaAtiva, cfgOddMin, cfgOddMed, cfgTema] = await Promise.all([
       supaGet('apostas_bets'),
@@ -2792,8 +2773,6 @@ async function carregarDadosApp() {
   updateSiteSelector();
   loadAutocontrole();
 
-  const loader = document.getElementById('syncLoader');
-  if (loader) { loader.textContent = 'Sincronizado com sucesso'; setTimeout(() => loader.remove(), 1200); }
 
   // Ajusta padding-top dinamicamente baseado na altura real do header
   const hdr = document.querySelector('header');
