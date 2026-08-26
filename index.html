@@ -6595,7 +6595,7 @@ function atualizarBotoesTema(tema) {
   if (w) w.style.border = tema === 'branco' ? '2px solid #16a34a' : '2px solid transparent';
 }
 function loadTema() {
-  const tema = localStorage.getItem('cfg_tema') || 'escuro';
+  const tema = localStorage.getItem('cfg_tema') || 'branco';
   aplicarTema(tema);
   setTimeout(() => atualizarBotoesTema(tema), 200);
 }
@@ -6722,7 +6722,7 @@ function toggleMenuConfig() {
   const nome = localStorage.getItem('cfg_nome') || '-';
   const min = localStorage.getItem('cfg_odd_min');
   const med = localStorage.getItem('cfg_odd_med');
-  const tema = localStorage.getItem('cfg_tema') || 'escuro';
+  const tema = localStorage.getItem('cfg_tema') || 'branco';
   const senhaAtiva = localStorage.getItem('cfg_senha_ativa') === '1';
   const nEl = document.getElementById('menuNomeVal');
   const oEl = document.getElementById('menuOddsVal');
@@ -7374,6 +7374,7 @@ function updateMetaRoi(roi, lucroTotal, totalEntrada, nApostas) {
 
   // Atualiza ROI atual
   const roiEl = document.getElementById('metaRoiAtual');
+  if (!roiEl) return; // elementos do card Meta ROI não existem nesta página — evita travar o restante de updateStats()
   if (nApostas === 0) {
     roiEl.textContent = '-';
     roiEl.style.color = 'var(--muted)';
