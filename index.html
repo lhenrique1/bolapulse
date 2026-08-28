@@ -2764,6 +2764,7 @@ async function carregarDadosApp() {
   loadSenhaConfig();
   checkSenhaAoAbrir();
   checkAdminControls();
+  setInterval(checkAdminControls, 30000); // verifica avisos do admin a cada 30s, sem precisar recarregar
   render();
   renderSites();
   updateSiteSelector();
@@ -6902,6 +6903,11 @@ async function checkAdminControls() {
       const b = document.getElementById('adminBanner');
       if (b) b.remove();
     }
+
+    // 3. Badge de mensagens novas
+    const lidas = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+    const naoLidas = (cfg.aviso_global && cfg.aviso_texto && !lidas.includes('ativo')) ? 1 : 0;
+    if (typeof atualizarBadgeMensagens === 'function') atualizarBadgeMensagens(naoLidas);
   } catch(e) { /* offline */ }
 }
 
@@ -6929,82 +6935,12 @@ async function checkMensagensAdmin() {
   } catch(e) { /* offline */ }
 }
 
-async function checkAdminControls() {
-  let cfg = {};
-  try {
-    const r = await fetch(`${BC_API}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'getAdminConfig' })
-    });
-    const d = await r.json();
-    if (d.ok && d.config) cfg = d.config;
-    else cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  } catch(e) {
-    cfg = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  }
-
-  // 1. Modo manutenção
-  if (cfg.manutencao) {
-    const msg = cfg.msgManutencao || 'O BetControl está em manutenção. Voltamos em breve!';
-    document.body.innerHTML = `
-      <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-        background:#080c14;color:#e8edf5;font-family:'DM Sans',sans-serif;padding:32px;text-align:center;">
-        <div style="font-size:48px;margin-bottom:16px;">🔧</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#00e676;margin-bottom:8px;">BETCONTROL</div>
-        <div style="font-size:15px;font-weight:600;margin-bottom:10px;">Em Manutenção</div>
-        <div style="font-size:13px;color:#546e7a;max-width:280px;line-height:1.6;">${msg}</div>
-      </div>`;
-    return;
-  }
-
-  // 2. Aviso global (mensagem do admin)
-  if (cfg.avisoGlobal && cfg.avisoTexto) {
-    const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
-    const cor = cores[cfg.avisoTipo] || '#00e676';
-    const banner = document.createElement('div');
-    banner.id = 'adminBanner';
-    banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
-      color:#000;text-align:center;font-size:11px;font-weight:700;padding:5px 12px;
-      letter-spacing:0.5px;cursor:pointer;`;
-    banner.textContent = (cfg.avisoTitulo ? cfg.avisoTitulo + ': ' : '') + cfg.avisoTexto;
-    banner.onclick = () => banner.remove();
-    document.body.prepend(banner);
-  }
-
-  // 3. Forçar atualização de versão
-  if (cfg.versaoMinima) {
-    const atual = '7.1.1';
-    if (cfg.versaoMinima !== atual) {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `position:fixed;inset:0;z-index:999999;background:#000d;
-        display:flex;flex-direction:column;align-items:center;justify-content:center;
-        font-family:'DM Sans',sans-serif;color:#e8edf5;text-align:center;padding:32px;`;
-      overlay.innerHTML = `
-        <div style="font-size:36px;margin-bottom:12px;">🚀</div>
-        <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Atualização disponível</div>
-        <div style="font-size:13px;color:#546e7a;margin-bottom:24px;max-width:260px;line-height:1.6;">
-          Uma nova versão (v${cfg.versaoMinima}) está disponível.<br>Atualize para continuar usando.
-        </div>
-        <div style="font-size:11px;color:#37474f;">Contate o administrador para receber o arquivo atualizado.</div>`;
-      document.body.prepend(overlay);
-    }
-  }
-
-  // 4. Tema forçado pelo admin
-  if (cfg.temaForcado) aplicarTema(cfg.temaForcado);
-
-  // 5. Autocontrole do admin
-  if (cfg.acMaxPerdas || cfg.acMaxPrejuizo || cfg.acMaxApostas) {
-    const ac = JSON.parse(localStorage.getItem('ac_config') || '{}');
-    if (cfg.acMaxPerdas   && !ac.maxPerdas)   ac.maxPerdas   = cfg.acMaxPerdas;
-    if (cfg.acMaxPrejuizo && !ac.maxPrejuizo) ac.maxPrejuizo = cfg.acMaxPrejuizo;
-    if (cfg.acMaxApostas  && !ac.maxApostas)  ac.maxApostas  = cfg.acMaxApostas;
-    localStorage.setItem('ac_config', JSON.stringify(ac));
-  }
-
-  // 6. Badge de mensagens novas
-  checkMensagensNovas();
+function checkMensagensNovas() {
+  const lidas  = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+  const cfgRaw = JSON.parse(localStorage.getItem('admin_config') || '{}');
+  let naoLidas = 0;
+  if (cfgRaw.avisoGlobal && cfgRaw.avisoTexto && !lidas.includes('ativo')) naoLidas++;
+  atualizarBadgeMensagens(naoLidas);
 }
 
 // Fica escutando mudanças do admin em tempo real
