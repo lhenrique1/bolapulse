@@ -6918,6 +6918,7 @@ async function checkMensagensAdmin() {
     const r = await fetch(`${SUPA}/rest/v1/bc_admin_config?id=eq.mensagens&select=config`,
       { headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' } }
     );
+    if (!r.ok) { console.error('checkMensagensAdmin: erro HTTP', r.status, await r.text()); return; }
     const d = await r.json();
     const msgs = (d && d[0] && Array.isArray(d[0].config)) ? d[0].config : [];
 
@@ -6948,79 +6949,6 @@ window.addEventListener('storage', (e) => {
 });
 
 // MENSAGENS DO ADMIN
-function abrirMensagensAdmin() {
-  document.getElementById('menuConfigDrop').style.display = 'none';
-  const modal = document.getElementById('mensagensAdminModal');
-  modal.style.display = 'flex';
-  renderMensagensAdmin();
-}
-
-function fecharMensagensAdmin() {
-  document.getElementById('mensagensAdminModal').style.display = 'none';
-}
-
-function renderMensagensAdmin() {
-  const cfg       = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  const mensagens = JSON.parse(localStorage.getItem('admin_mensagens_historico') || '[]');
-  const lidas     = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
-  const lista     = document.getElementById('mensagensAdminLista');
-  if (!lista) return;
-
-  // Aviso ativo do admin
-  const avisos = [];
-  if (cfg.avisoGlobal && cfg.avisoTexto) {
-    avisos.push({ id: 'ativo', titulo: cfg.avisoTitulo || 'Aviso', texto: cfg.avisoTexto, tipo: cfg.avisoTipo || 'info', ts: 'Ativo agora' });
-  }
-  // Histórico de mensagens salvas no localStorage
-  mensagens.forEach(m => avisos.push(m));
-
-  if (!avisos.length) {
-    lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px;">Nenhuma mensagem do administrador</div>';
-    atualizarBadgeMensagens(0);
-    return;
-  }
-
-  const naoLidas = avisos.filter(m => !lidas.includes(m.id || m.ts)).length;
-  atualizarBadgeMensagens(naoLidas);
-
-  const cores = { info:'var(--azul)', warn:'var(--amarelo)', update:'var(--verde)', promo:'var(--roxo)' };
-  const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
-
-  lista.innerHTML = avisos.map(m => {
-    const lida = lidas.includes(m.id || m.ts);
-    return `<div onclick="marcarLida('${m.id || m.ts}')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:${lida ? 'transparent' : 'rgba(0,230,118,0.03)'};">
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <div style="font-size:18px;flex-shrink:0;">${icons[m.tipo] || 'ℹ️'}</div>
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
-            <span style="font-size:13px;font-weight:${lida ? '500' : '700'};color:var(--text);">${m.titulo || 'Aviso'}</span>
-            ${!lida ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--verde);flex-shrink:0;"></div>' : ''}
-          </div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.5;">${m.texto}</div>
-          <div style="font-size:10px;color:var(--muted2);margin-top:4px;">${m.ts || ''}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function marcarLida(id) {
-  const lidas = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
-  if (!lidas.includes(id)) { lidas.push(id); localStorage.setItem('admin_msgs_lidas', JSON.stringify(lidas)); }
-  renderMensagensAdmin();
-}
-
-function marcarTodasLidas() {
-  const cfg       = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  const mensagens = JSON.parse(localStorage.getItem('admin_mensagens_historico') || '[]');
-  const ids = [];
-  if (cfg.avisoGlobal) ids.push('ativo');
-  mensagens.forEach(m => ids.push(m.id || m.ts));
-  localStorage.setItem('admin_msgs_lidas', JSON.stringify(ids));
-  renderMensagensAdmin();
-  showToast('Todas mensagens marcadas como lidas');
-}
-
 function atualizarBadgeMensagens(count) {
   const badge = document.getElementById('msgAdminBadge');
   if (!badge) return;
@@ -7028,21 +6956,20 @@ function atualizarBadgeMensagens(count) {
   else { badge.style.display = 'none'; }
 }
 
-function checkMensagensNovas() {
-  const cfg    = JSON.parse(localStorage.getItem('admin_config') || '{}');
-  const lidas  = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
-  let naoLidas = 0;
-  if (cfg.avisoGlobal && cfg.avisoTexto && !lidas.includes('ativo')) naoLidas++;
-  atualizarBadgeMensagens(naoLidas);
-}
-
 // -- MENSAGENS DO ADMIN --------------------------------------------
-function abrirMensagensAdmin() {
+async function abrirMensagensAdmin() {
   document.getElementById('menuConfigDrop').style.display = 'none';
-  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
-  const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
   const lista = document.getElementById('mensagensLista');
   const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
+
+  // Mostra o que já tem localmente enquanto busca dados frescos
+  document.getElementById('mensagensModal').style.display = 'flex';
+  lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px 16px;font-size:13px;">Carregando...</div>';
+
+  await checkMensagensAdmin(); // busca mensagens novas do Supabase antes de exibir
+
+  const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
+  const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
 
   if (!msgs.length) {
     lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px 16px;font-size:13px;">Nenhuma mensagem ainda</div>';
@@ -7061,7 +6988,6 @@ function abrirMensagensAdmin() {
       </div>`;
     }).join('');
   }
-  document.getElementById('mensagensModal').style.display = 'flex';
 }
 
 function fecharMensagensModal() {
