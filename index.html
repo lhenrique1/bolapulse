@@ -2764,7 +2764,7 @@ async function carregarDadosApp() {
   loadSenhaConfig();
   checkSenhaAoAbrir();
   checkAdminControls();
-  setInterval(checkAdminControls, 30000); // verifica avisos do admin a cada 30s, sem precisar recarregar
+  setInterval(() => { checkAdminControls(); checkMensagensAdmin(); }, 30000); // verifica avisos e mensagens do admin a cada 30s, sem precisar recarregar
   render();
   renderSites();
   updateSiteSelector();
@@ -6915,19 +6915,17 @@ async function checkMensagensAdmin() {
   try {
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eHJmbGpka2lrcXpjeG10YmlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTczMDMsImV4cCI6MjA5Nzk5MzMwM30.AYnsHBi5NTOr_hLo9NY4ZNP3fseYKwVprkPt7HzAoc8';
     const SUPA = 'https://auxrfljdkikqzcxmtbii.supabase.co';
-    const r = await fetch(`${SUPA}/rest/v1/bc_mensagens?ativo=eq.true&order=criado_em.desc&select=*`,
+    const r = await fetch(`${SUPA}/rest/v1/bc_admin_config?id=eq.mensagens&select=config`,
       { headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' } }
     );
-    const msgs = await r.json();
-    if (!Array.isArray(msgs)) return;
+    const d = await r.json();
+    const msgs = (d && d[0] && Array.isArray(d[0].config)) ? d[0].config : [];
 
-    // Salva localmente para exibir no modal
-    localStorage.setItem('admin_mensagens', JSON.stringify(
-      msgs.map(m => ({ id: m.id, titulo: m.titulo, texto: m.texto, tipo: m.tipo, ts: new Date(m.criado_em).toLocaleString('pt-BR') }))
-    ));
+    // Salva localmente para exibir no modal (mesmo formato usado em abrirMensagensAdmin)
+    localStorage.setItem('admin_mensagens', JSON.stringify(msgs));
 
     const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
-    const naoLidas = msgs.filter(m => !lidas.includes(m.id));
+    const naoLidas = msgs.filter(m => !lidas.includes(m.ts));
     const dot   = document.getElementById('menuMsgDot');
     const count = document.getElementById('menuMsgCount');
     if (dot)   dot.style.display  = naoLidas.length > 0 ? 'block' : 'none';
