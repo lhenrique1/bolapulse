@@ -6889,17 +6889,26 @@ async function checkAdminControls() {
     }
 
     // 2. Aviso global
-    if (cfg.aviso_global && cfg.aviso_texto && !document.getElementById('adminBanner')) {
+    const avisoChave = cfg.aviso_titulo + '|' + cfg.aviso_texto;
+    const avisoFechado = localStorage.getItem('aviso_fechado') === avisoChave;
+    if (cfg.aviso_global && cfg.aviso_texto && !avisoFechado && !document.getElementById('adminBanner')) {
       const cores = { info:'#448aff', warn:'#ffd740', update:'#00e676', promo:'#d500f9' };
       const cor = cores[cfg.aviso_tipo] || '#00e676';
       const banner = document.createElement('div');
       banner.id = 'adminBanner';
       banner.style.cssText = `position:fixed;top:0;left:0;right:0;z-index:999998;background:${cor};
-        color:#000;text-align:center;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;`;
-      banner.textContent = (cfg.aviso_titulo ? cfg.aviso_titulo + ': ' : '') + cfg.aviso_texto;
-      banner.onclick = () => banner.remove();
+        color:#000;text-align:center;font-size:11px;font-weight:700;padding:6px 32px 6px 12px;position:fixed;`;
+      banner.innerHTML = `<span>${(cfg.aviso_titulo ? cfg.aviso_titulo + ': ' : '') + cfg.aviso_texto}</span>
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;">×</span>`;
+      banner.querySelector('span:last-child').onclick = () => {
+        localStorage.setItem('aviso_fechado', avisoChave);
+        const lidasArr = JSON.parse(localStorage.getItem('admin_msgs_lidas') || '[]');
+        if (!lidasArr.includes('ativo')) { lidasArr.push('ativo'); localStorage.setItem('admin_msgs_lidas', JSON.stringify(lidasArr)); }
+        if (typeof atualizarBadgeMensagens === 'function') atualizarBadgeMensagens(0);
+        banner.remove();
+      };
       document.body.prepend(banner);
-    } else if (!cfg.aviso_global) {
+    } else if (!cfg.aviso_global || avisoFechado) {
       const b = document.getElementById('adminBanner');
       if (b) b.remove();
     }
@@ -6960,21 +6969,27 @@ function atualizarBadgeMensagens(count) {
 async function abrirMensagensAdmin() {
   document.getElementById('menuConfigDrop').style.display = 'none';
   const lista = document.getElementById('mensagensLista');
-  const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
 
   // Mostra o que já tem localmente enquanto busca dados frescos
   document.getElementById('mensagensModal').style.display = 'flex';
   lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px 16px;font-size:13px;">Carregando...</div>';
 
   await checkMensagensAdmin(); // busca mensagens novas do Supabase antes de exibir
+  renderMensagensLista();
+}
 
+function renderMensagensLista() {
+  const lista = document.getElementById('mensagensLista');
+  const icons = { info:'ℹ️', warn:'⚠️', update:'🚀', promo:'🎉' };
   const msgs = JSON.parse(localStorage.getItem('admin_mensagens') || '[]');
   const lidas = JSON.parse(localStorage.getItem('bc_msgs_lidas') || '[]');
+  const apagadas = JSON.parse(localStorage.getItem('bc_msgs_apagadas') || '[]');
+  const visiveis = msgs.filter(m => !apagadas.includes(m.ts));
 
-  if (!msgs.length) {
+  if (!visiveis.length) {
     lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px 16px;font-size:13px;">Nenhuma mensagem ainda</div>';
   } else {
-    lista.innerHTML = msgs.map(m => {
+    lista.innerHTML = visiveis.map(m => {
       const lida = lidas.includes(m.ts);
       return `<div style="padding:12px 18px;border-bottom:1px solid var(--border);opacity:${lida?'0.5':'1'};">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -6982,12 +6997,21 @@ async function abrirMensagensAdmin() {
             ${!lida ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--verde);flex-shrink:0;"></div>' : ''}
             <span style="font-size:13px;font-weight:700;color:var(--text);">${icons[m.tipo]||'📣'} ${m.titulo}</span>
           </div>
-          <span style="font-size:10px;color:var(--muted);">${m.ts}</span>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            <span style="font-size:10px;color:var(--muted);">${m.ts}</span>
+            <span onclick="apagarMensagemLocal('${m.ts.replace(/'/g,"\\'")}')" style="cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px;" title="Excluir">🗑</span>
+          </div>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5;">${m.texto}</div>
       </div>`;
     }).join('');
   }
+}
+
+function apagarMensagemLocal(ts) {
+  const apagadas = JSON.parse(localStorage.getItem('bc_msgs_apagadas') || '[]');
+  if (!apagadas.includes(ts)) { apagadas.push(ts); localStorage.setItem('bc_msgs_apagadas', JSON.stringify(apagadas)); }
+  renderMensagensLista();
 }
 
 function fecharMensagensModal() {
