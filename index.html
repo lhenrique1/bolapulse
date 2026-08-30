@@ -1709,6 +1709,17 @@
 
 <!-- TAB: STATS -->
 <div id="tab-stats" class="section">
+
+  <!-- BLOQUEIO — aparece quando o trial de 7 dias expira -->
+  <div id="statsPremiumLock" style="display:none;border:1px solid var(--border);border-radius:12px;padding:24px 16px;text-align:center;background:rgba(0,0,0,0.2);margin-bottom:16px;">
+    <div style="font-size:28px;margin-bottom:10px;">🔒</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Seu período de teste acabou</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">As estatísticas completas estão disponíveis nos planos<br><strong style="color:var(--verde);">Mensal</strong> e <strong style="color:var(--verde);">Anual</strong>.</div>
+    <button onclick="abrirPlanos()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--verde);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Ver planos</button>
+  </div>
+
+  <!-- CONTEÚDO — some quando o trial expira -->
+  <div id="statsPremiumConteudo">
   <div class="chart-wrap">
     <h3>EVOLUÇÃO DA BANCA</h3>
     <canvas id="bancaChart" style="height:175px"></canvas>
@@ -1809,6 +1820,7 @@
         <div class="smc-value" id="sTotalPerdido" style="font-size:15px;color:var(--vermelho)">—</div>
       </div>
     </div>
+  </div>
   </div>
 
   <div class="stats-section">
@@ -6782,6 +6794,16 @@ function saveAutocontrole() {
   localStorage.setItem('ac_config', JSON.stringify(cfg));
 }
 
+function checkStatsPremiumPlano() {
+  const plano = bcUser ? bcUser.plano : 'free';
+  const expirou = bcUser && bcUser.expira_em ? new Date(bcUser.expira_em) < new Date() : false;
+  const bloqueado = plano === 'trial' && expirou;
+  const lock = document.getElementById('statsPremiumLock');
+  const conteudo = document.getElementById('statsPremiumConteudo');
+  if (lock) lock.style.display = bloqueado ? 'block' : 'none';
+  if (conteudo) conteudo.style.display = bloqueado ? 'none' : 'block';
+}
+
 function checkAutocontrolePlano() {
   const plano = bcUser ? bcUser.plano : 'free';
   const bloqueado = plano === 'trial';
@@ -6798,6 +6820,7 @@ function checkAutocontrolePlano() {
 
 function loadAutocontrole() {
   checkAutocontrolePlano();
+  checkStatsPremiumPlano();
   const cfg = JSON.parse(localStorage.getItem('ac_config') || '{}');
   if (cfg.maxPerdas   != null) document.getElementById('acMaxPerdas').value   = cfg.maxPerdas;
   if (cfg.maxPrejuizo != null) document.getElementById('acMaxPrejuizo').value = cfg.maxPrejuizo;
@@ -7191,6 +7214,7 @@ async function verificarRetornoPagamento() {
         localStorage.setItem('bc_user_data', JSON.stringify(bcUser));
         showToast('Plano ' + getPlanoLabel(bcUser.plano) + ' ativado!');
         checkAutocontrolePlano();
+        checkStatsPremiumPlano();
         initExportButtons();
       }
     }, 2000);
